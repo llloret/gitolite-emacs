@@ -109,7 +109,7 @@
 		(set-buffer (get-buffer "*Occur*"))
 		(goto-char (point-min))
 		(toggle-read-only 0)
-		(while (re-search-forward ".*in \\(buffer .*\\)"
+		(while (re-search-forward ".*in \\(buffer.*\\)"
 								  (point-max)
 								  t)
 		  (replace-match (match-string 1))
