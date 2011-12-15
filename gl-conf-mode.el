@@ -157,16 +157,22 @@
 
 
 (defun gl-conf-visit-include ()
-  "Visit the include file that is on the current line. It follows wildcards."
+  "Visit the include file that is on the current line. It follows wildcards. Opens the include(s) in gl-conf major mode."
   (interactive)
   (let (curpoint (point)
-				 endpoint)
+				 endpoint
+				 buffers)
     (end-of-line nil)
     (setq endpoint (point))
     (beginning-of-line nil)
-    (if (re-search-forward gl-conf-regex-include endpoint t)
-		(find-file (match-string 1) t)
-	  (message "Not a include line")))
+    (if (not (re-search-forward gl-conf-regex-include endpoint t))
+		(message "Not a include line")
+	  (setq buffers (find-file (match-string 1) t))
+	  (if (listp buffers)
+		  (dolist (buf buffers)
+			(switch-to-buffer buf)
+			(gl-conf-mode))
+		(gl-conf-mode))))
   )
 
 ;; conditional predicate that tells whether a buffer name starts with a *
@@ -180,12 +186,7 @@
 		(mapcar (lambda (x) (and (funcall 'buffer-starts-with-star x) x)) lst))
   )
 
-(defun gl-conf-list-repos ()
-  "Opens another window with a list of the repos that were found. It supports hyperlinking, so hitting RET on there will
-take you to the occurrence.
-
-In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
-Otherwise it will use 'occur', which searches only in the current file."
+(defun gl-conf-list-common (regex)
   (interactive)
   (save-excursion
     ;; open the included files
@@ -194,11 +195,33 @@ Otherwise it will use 'occur', which searches only in the current file."
 	  ;; Before calling multi-occur, filter out special buffers starting with *
 	  ;; If multi-occur is not found fallback to occur
 	(if (fboundp 'multi-occur)
-		(multi-occur (filter-star-buffers buflist) "^[ \t]*repo[ \t]+.*")
-	  (occur "^[ \t]*repo[ \t]+.*")))
+		(multi-occur (filter-star-buffers buflist) regex)
+	  (occur regex)))
 	;; Clean the navigation buffer that occur created
     (occur-clean)
     )
+  )
+
+
+(defun gl-conf-list-repos ()
+  "Opens another window with a list of the repos that were found. It supports hyperlinking, so hitting RET on there will
+take you to the occurrence.
+
+In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
+Otherwise it will use 'occur', which searches only in the current file."
+  (interactive)
+  (gl-conf-list-common "^[ \t]*repo[ \t]+.*")
+  )
+
+
+(defun gl-conf-list-groups ()
+  "Opens another window with a list of the group definitions that were found. It supports hyperlinking, so hitting RET on there will
+take you to the occurrence.
+
+In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
+Otherwise it will use 'occur', which searches only in the current file."
+  (interactive)
+  (gl-conf-list-common "^[ \t]*@[A-Za-z0-9][A-Za-z0-9-_.]+")
   )
 
 (defun gl-conf-mark-repo ()
@@ -296,6 +319,8 @@ key          binding                       description
   (local-set-key (kbd "C-c C-v") 'gl-conf-visit-include)
   (local-set-key (kbd "C-c C-l") 'gl-conf-list-repos)
   (local-set-key (kbd "C-c C-m") 'gl-conf-mark-repo)
+  (local-set-key (kbd "C-c C-g") 'gl-conf-list-groups)
+
 
   ;; Run user hooks.
   (run-hooks 'gl-conf-mode-hook))
