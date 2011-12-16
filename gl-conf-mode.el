@@ -160,12 +160,9 @@
   "Visit the include file that is on the current line. It follows wildcards. Opens the include(s) in gl-conf major mode."
   (interactive)
   (let (curpoint (point)
-				 endpoint
 				 buffers)
-    (end-of-line nil)
-    (setq endpoint (point))
     (beginning-of-line nil)
-    (if (not (re-search-forward gl-conf-regex-include endpoint t))
+    (if (not (re-search-forward gl-conf-regex-include (point-at-eol) t))
 		(message "Not a include line")
 	  (setq buffers (find-file (match-string 1) t))
 	  (if (listp buffers)
@@ -254,7 +251,7 @@ Otherwise it will use 'occur', which searches only in the current file."
 		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*=" 1 font-lock-variable-name-face) ;; group definition
 		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)" 1 font-lock-warning-face) ;; group wrong definition (warning)
 		'("[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)" 1 font-lock-variable-name-face) ;; group usage
-		'("^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?\\)[ \t]*\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*=" 1 font-lock-type-face)) ;; refexes
+		'("^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*=" 1 font-lock-type-face)) ;; refexes
 
   "gl-conf mode syntax highlighting."
   )
@@ -289,17 +286,22 @@ key          binding                       description
 \\[gl-conf-find-prev-repo]      gl-conf-find-prev-repo        move to previous repository definition.
 \\[gl-conf-visit-include]      gl-conf-visit-include         go to the include file on the line where the cursor is.
 \\[gl-conf-list-repos]      gl-conf-list-repo             open a navigation window with all the repositories (hyperlink enabled).
-\\[gl-conf-mark-repo]      gl-conf-mark-repo             mark (select) the current repository and body."
+\\[gl-conf-mark-repo]      gl-conf-mark-repo             mark (select) the current repository and body.
+\\[gl-conf-list-groups]      gl-conf-list-groups             open a navigation window with all the repositories (hyperlink enabled).
+\\[gl-conf-context-help]      gl-conf-mark-repo             open gitolite help (context sensitive)."
 
   (interactive)
   (kill-all-local-variables)
   (setq major-mode 'gl-conf-mode)
   (setq mode-name "gitolite-conf")
 
+  (require 'thingatpt)
+
   ;; Create the syntax table
   (setq gl-conf-mode-syntax-table (make-syntax-table))
   (set-syntax-table gl-conf-mode-syntax-table)
   (modify-syntax-entry ?_  "w" gl-conf-mode-syntax-table)
+  (modify-syntax-entry ?@  "w" gl-conf-mode-syntax-table)
   (modify-syntax-entry ?# "<" gl-conf-mode-syntax-table)
   (modify-syntax-entry ?\n ">" gl-conf-mode-syntax-table)
 
@@ -312,6 +314,10 @@ key          binding                       description
 
   (make-local-variable 'comment-start)
   (setq comment-start "#")
+
+  ;; to make searches case sensitive in some points in the code
+  (make-local-variable 'case-fold-search)
+
 
   ;; setup key bindings (C-c followed by control character are reserved for major modes by the conventions)
   (local-set-key (kbd "C-c C-n") 'gl-conf-find-next-repo)
