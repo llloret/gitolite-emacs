@@ -40,7 +40,7 @@
 ;; with a browser.
 ;; If the emacs w3m module is available in the system, it will be used to open 
 ;; the help inside emacs, otherwise, the emacs configured external browser will 
-;; be launched (emacs variable "browse-usr-browser-function")
+;; be launched (emacs variable "browse-url-browser-function")
 ;;
 ;;
 ;; Please note, that while it is not required by the license, I would
