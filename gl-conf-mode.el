@@ -258,33 +258,35 @@ Otherwise it will use 'occur', which searches only in the current file."
 	  (beginning-of-line)
 
 	  ;; are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
-	  (if (re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
-		  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html")
-				 (message "Opened help for user / group assignment"))
+	  (cond
+	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
+		(w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html")
+		(message "Opened help for user / group assignment"))
 
-		;; are we on a refex or right after it? (if there is a permission before and we are looking at some word)
-		(if (re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
-			(progn (w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html#refex")
-				   (message "Opened help for refex definition"))
+	   ;; are we on a refex or right after it? (if there is a permission before and we are looking at some word)
+	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
+		(w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html#refex")
+		(message "Opened help for refex definition"))
 
 		  ;; are we in a permission code or right after it?
-		  (if (re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
-			  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
-					 (message "Opened help for permission values"))
+	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
+		(w3m-goto-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
+		(message "Opened help for permission values"))
 
-			;; look for other things...
-			;; are we in a repo line?
-			(if (looking-at "[ \t]*repo" )
-			  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
-					 (message "Opened help for repo"))
+	   ;; look for other things...
+	   ;; are we in a repo line?
+	   ((looking-at "[ \t]*repo" )
+		(w3m-goto-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
+		(message "Opened help for repo"))
 
-			  ;; are we in an include line?
-			  (if (looking-at "[ \t]*include")
-				  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
-						 (message "Opened help for includes"))
-				;; not found anything? Open generic help
-				(w3m-goto-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
-				(message "Not in any known context. Opened general help help for user / group assignment"))))))))
+	   ;; are we in an include line?
+	   ((looking-at "[ \t]*include")
+		(w3m-goto-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
+		(message "Opened help for includes"))
+		 ;; not found anything? Open generic help
+	   (t
+		(w3m-goto-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
+		(message "Not in any known context. Opened general help for gitolite.conf")))))
 
   (setq case-fold-search old-case-fold-search)
   )
