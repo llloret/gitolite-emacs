@@ -24,7 +24,23 @@
 ;; - open a navigation window with all the repositories (hyperlink enabled): C-c C-l
 ;; - mark the current repository and body: C-c C-m
 ;; - open a navigation window with all the defined groups (hyperlink enabled): C-c C-g
-;; - offer context setitive help linking to the original web documentation: C-c C-h
+;; - offer context sentitive help linking to the original web documentation: C-c C-h
+;;
+;; For the context sensitive help it can detect different positions, and will offer
+;; help on that topic:
+;;    - repo line
+;;    - include line 
+;;    - permissions (R/RW/RWC/...)
+;;    - refexes (branches, ...)
+;;    - user or group permissions
+;;    - groups
+;;    - anything else (offer generic gitolite.conf help)
+
+;; The help uses the main gitolite web documentation, linking directly into it 
+;; with a browser.
+;; If the emacs w3m module is available in the system, it will be used to open 
+;; the help inside emacs, otherwise, the emacs configured external browser will 
+;; be launched (emacs variable "browse-usr-browser-function")
 ;;
 ;;
 ;; Please note, that while it is not required by the license, I would
