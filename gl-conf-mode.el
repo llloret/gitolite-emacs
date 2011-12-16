@@ -243,49 +243,63 @@ Otherwise it will use 'occur', which searches only in the current file."
 		  (end-of-line)))
 )
 
+(defun open-url (url)
+  (interactive)
+  (let ((cur-buffer (get-buffer (buffer-name))))
+	(if (fboundp 'w3m-goto-url)
+		(progn
+		  (when (one-window-p t)
+			(split-window)
+			(set-window-buffer nil cur-buffer))
+		  (w3m-goto-url url))
+
+	  (browse-url url)))
+
+  )
+
 (defun gl-conf-context-help ()
   "Offer context-sensitive help. Currently it needs w3m emacs installed. It would be nice if it could fall back to another mechanism, if this is not available"
   (interactive)
-;; we want to make this section case-sensitive
+  ;; we want to make this section case-sensitive
   (setq old-case-fold-search case-fold-search)
   (setq case-fold-search nil)
   (setq cur-point (point)) ;; make a let
   (save-excursion
 	;; are we in a group?
 	(if (and (word-at-point) (string-match "^@" (word-at-point)))
-		(progn (w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html#groups")
+		(progn (open-url "http://sitaramc.github.com/gitolite/bac.html#groups")
 			   (message "Opened help for group definition"))
 	  (beginning-of-line)
 
 	  ;; are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
 	  (cond
 	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
-		(w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html")
+		(open-url "http://sitaramc.github.com/gitolite/bac.html")
 		(message "Opened help for user / group assignment"))
 
 	   ;; are we on a refex or right after it? (if there is a permission before and we are looking at some word)
 	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
-		(w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html#refex")
+		(open-url "http://sitaramc.github.com/gitolite/bac.html#refex")
 		(message "Opened help for refex definition"))
 
 		  ;; are we in a permission code or right after it?
 	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
-		(w3m-goto-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
+		(open-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
 		(message "Opened help for permission values"))
 
 	   ;; look for other things...
 	   ;; are we in a repo line?
 	   ((looking-at "[ \t]*repo" )
-		(w3m-goto-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
+		(open-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
 		(message "Opened help for repo"))
 
 	   ;; are we in an include line?
 	   ((looking-at "[ \t]*include")
-		(w3m-goto-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
+		(open-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
 		(message "Opened help for includes"))
 		 ;; not found anything? Open generic help
 	   (t
-		(w3m-goto-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
+		(open-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
 		(message "Not in any known context. Opened general help for gitolite.conf")))))
 
   (setq case-fold-search old-case-fold-search)
