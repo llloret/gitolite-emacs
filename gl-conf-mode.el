@@ -23,6 +23,8 @@
 ;; - go to the include file on the line where the cursor is: C-c C-v
 ;; - open a navigation window with all the repositories (hyperlink enabled): C-c C-l
 ;; - mark the current repository and body: C-c C-m
+;; - open a navigation window with all the defined groups (hyperlink enabled): C-c C-g
+;; - offer context setitive help linking to the original web documentation: C-c C-h
 ;;
 ;;
 ;; Please note, that while it is not required by the license, I would
@@ -241,6 +243,54 @@ Otherwise it will use 'occur', which searches only in the current file."
 		  (end-of-line)))
 )
 
+(defun gl-conf-context-help ()
+  "Offer context-sensitive help. Currently it needs w3m emacs installed. It would be nice if it could fall back to another mechanism, if this is not available"
+  (interactive)
+;; we want to make this section case-sensitive
+  (setq old-case-fold-search case-fold-search)
+  (setq case-fold-search nil)
+  (setq cur-point (point)) ;; make a let
+  (save-excursion
+	;; are we in a group?
+	(if (and (word-at-point) (string-match "^@" (word-at-point)))
+		(progn (w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html#groups")
+			   (message "Opened help for group definition"))
+	  (beginning-of-line)
+
+	  ;; are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
+	  (if (re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
+		  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html")
+				 (message "Opened help for user / group assignment"))
+
+		;; are we on a refex or right after it? (if there is a permission before and we are looking at some word)
+		(if (re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
+			(progn (w3m-goto-url "http://sitaramc.github.com/gitolite/bac.html#refex")
+				   (message "Opened help for refex definition"))
+
+		  ;; are we in a permission code or right after it?
+		  (if (re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
+			  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
+					 (message "Opened help for permission values"))
+
+			;; look for other things...
+			;; are we in a repo line?
+			(if (looking-at "[ \t]*repo" )
+			  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
+					 (message "Opened help for repo"))
+
+			  ;; are we in an include line?
+			  (if (looking-at "[ \t]*include")
+				  (progn (w3m-goto-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
+						 (message "Opened help for includes"))
+				;; not found anything? Open generic help
+				(w3m-goto-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
+				(message "Not in any known context. Opened general help help for user / group assignment"))))))))
+
+  (setq case-fold-search old-case-fold-search)
+  )
+
+
+
 ;; Definition of constants for the font-lock functionality
 (defconst gl-conf-font-lock-buffer
   (list '("^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.]*\\)[ \t\n]" 1 font-lock-keyword-face) ;; repository definition
@@ -287,7 +337,7 @@ key          binding                       description
 \\[gl-conf-visit-include]      gl-conf-visit-include         go to the include file on the line where the cursor is.
 \\[gl-conf-list-repos]      gl-conf-list-repo             open a navigation window with all the repositories (hyperlink enabled).
 \\[gl-conf-mark-repo]      gl-conf-mark-repo             mark (select) the current repository and body.
-\\[gl-conf-list-groups]      gl-conf-list-groups             open a navigation window with all the repositories (hyperlink enabled).
+\\[gl-conf-list-groups]      gl-conf-list-groups           open a navigation window with all the repositories (hyperlink enabled).
 \\[gl-conf-context-help]      gl-conf-mark-repo             open gitolite help (context sensitive)."
 
   (interactive)
@@ -326,6 +376,7 @@ key          binding                       description
   (local-set-key (kbd "C-c C-l") 'gl-conf-list-repos)
   (local-set-key (kbd "C-c C-m") 'gl-conf-mark-repo)
   (local-set-key (kbd "C-c C-g") 'gl-conf-list-groups)
+  (local-set-key (kbd "C-c C-h") 'gl-conf-context-help)
 
 
   ;; Run user hooks.
