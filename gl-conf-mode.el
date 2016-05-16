@@ -325,7 +325,7 @@ Otherwise it will use 'occur', which searches only in the current file."
 
 ;; Definition of constants for the font-lock functionality
 (defconst gl-conf-font-lock-buffer
-  (list '("^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.]*\\)[ \t\n]" 1 font-lock-keyword-face) ;; repository definition
+  (list '("^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]" 1 font-lock-keyword-face) ;; repository definition
 		'("^[ \t]*\\(include[ \t]+\\)" 1 font-lock-keyword-face) ;; include definition
 		'("^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t].*=" 1 font-lock-type-face) ;; permissions
 		'("^[ \t]*\\(config\\).*=" 1 font-lock-reference-face) ;; config
