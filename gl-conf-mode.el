@@ -327,13 +327,13 @@ Otherwise it will use 'occur', which searches only in the current file."
 (defconst gl-conf-font-lock-buffer
   (list '("^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]" 1 font-lock-keyword-face) ;; repository definition
 		'("^[ \t]*\\(include[ \t]+\\)" 1 font-lock-keyword-face) ;; include definition
-		'("^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t].*=" 1 font-lock-type-face) ;; permissions
+		'("^[ \t]*\\(-\\|R\\|RW\\+?C?D?M?\\)[ \t].*=" 1 font-lock-type-face) ;; permissions
 		'("^[ \t]*\\(config\\).*=" 1 font-lock-reference-face) ;; config
 		'("^[ \t]*\\(config.*\\)" 1 font-lock-warning-face) ;; config partial definition (warning)
 		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*=" 1 font-lock-variable-name-face) ;; group definition
 		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)" 1 font-lock-warning-face) ;; group wrong definition (warning)
 		'("[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)" 1 font-lock-variable-name-face) ;; group usage
-		'("^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*=" 1 font-lock-type-face)) ;; refexes
+		'("^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?M?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*=" 1 font-lock-type-face)) ;; refexes
 
   "gl-conf mode syntax highlighting."
   )
