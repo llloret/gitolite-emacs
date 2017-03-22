@@ -1,5 +1,7 @@
 ;; gitolite-conf-mode.el --- major-mode for editing gitolite config files
 ;;
+;;; Commentary:
+;;
 ;; Provides navigation utilities, syntax highlighting and indentation for
 ;; gitolite configuration files (gitolite.conf)
 ;;
@@ -14,7 +16,7 @@
 ;; M-x gl-conf-mode, after opening the file
 ;;
 ;; Automatic indentation for this mode is disabled by default.
-;; If you want to enable it, go to Customization menu in emacs,
+;; If you want to enable it, go to Customization menu in Emacs,
 ;; then "Files", "Gitolite Config Files", and select the appropiate option.
 ;;
 ;; The interesting things you can do are:
@@ -29,18 +31,18 @@
 ;; For the context sensitive help it can detect different positions, and will offer
 ;; help on that topic:
 ;;    - repo line
-;;    - include line 
+;;    - include line
 ;;    - permissions (R/RW/RWC/...)
 ;;    - refexes (branches, ...)
 ;;    - user or group permissions
 ;;    - groups
 ;;    - anything else (offer generic gitolite.conf help)
 
-;; The help uses the main gitolite web documentation, linking directly into it 
+;; The help uses the main gitolite web documentation, linking directly into it
 ;; with a browser.
-;; If the emacs w3m module is available in the system, it will be used to open 
-;; the help inside emacs, otherwise, the emacs configured external browser will 
-;; be launched (emacs variable "browse-url-browser-function")
+;; If the Emacs w3m module is available in the system, it will be used to open
+;; the help inside Emacs, otherwise, the Emacs configured external browser will
+;; be launched (Emacs variable `browse-url-browser-function')
 ;;
 ;;
 ;; Please note, that while it is not required by the license, I would
@@ -68,11 +70,16 @@
 ;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 ;; OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+;; NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 ;; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 ;; WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;; OTHER DEALINGS IN THE SOFTWARE.
+
+;;; Code:
+
+(require 'thingatpt)
+
 
 (defconst gl-conf-regex-repo "^[ \t]*repo[ \t]+")
 (defconst gl-conf-regex-include "^[ \t]*include[ \t]+\"\\(.*\\)\"")
@@ -108,6 +115,7 @@
   )
 
 (defun gl-conf-point-in-indendation ()
+  "Check if point is within a strip of whitespace used as indentation."
   (string-match "^[ \\t]*$" (buffer-substring (point-at-bol) (point))))
 
 (defun gl-conf-indent-line-to (column)
@@ -360,8 +368,10 @@ Otherwise it will use 'occur', which searches only in the current file."
 ;;
 (defun gl-conf-mode ()
   "Major mode for editing gitolite config files.
-Provides basic syntax highlighting (including detecting some malformed constructs) and some navigation functions
-Commands:
+
+Provides basic syntax highlighting (including detecting some
+malformed constructs) and some navigation functions Commands:
+
 key          binding                       description
 ---          -------                       -----------
 \\[gl-conf-find-next-repo]      gl-conf-find-next-repo        move to next repository definition.
@@ -422,3 +432,6 @@ key          binding                       description
 (provide 'gl-conf-visit-include)
 (provide 'gl-conf-list-repos)
 (provide 'gl-conf-mark-repo)
+
+
+;;; gl-conf-mode.el ends here
