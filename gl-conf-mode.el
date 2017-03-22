@@ -1,4 +1,4 @@
-;; gitolite-conf-mode.el --- major-mode for editing gitolite config files
+;; gl-conf-mode.el --- Mode for editing gitolite config files -*- lexical-binding: t -*-
 ;;
 ;;; Commentary:
 ;;
@@ -346,92 +346,70 @@ Otherwise it will use 'occur', which searches only in the current file."
   "gl-conf mode syntax highlighting."
   )
 
-;;
-;; Syntax table
-;;
-(defvar gl-conf-mode-syntax-table nil "Syntax table for gl-conf-mode.")
-(setq gl-conf-mode-syntax-table nil)
-
-;;
-;; User hook entry point.
-;;
-(defvar gl-conf-mode-hook nil)
 
 ;;
 ;; Customization to enable or disable automatic indentation
 ;;
-(defgroup gl-conf nil "Gitolite configuration editing." :tag "Gitolite config files" :prefix "gl-conf" :group 'files)
-(defcustom gl-conf-auto-indent-enable nil "Enable automatic indentation for gl-conf mode." :type 'boolean :group 'gl-conf)
+(defgroup gl-conf nil
+  "Gitolite configuration editing."
+  :tag "Gitolite config files"
+  :prefix "gl-conf"
+  :group 'files)
+
+(defcustom gl-conf-auto-indent-enable nil
+  "Enable automatic indentation for gl-conf mode."
+  :type 'boolean
+  :group 'gl-conf)
 
 ;;
 ;; gl-conf mode init function.
 ;;
-(defun gl-conf-mode ()
+
+(defconst gl-conf--syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?_  "w" table)
+    (modify-syntax-entry ?@  "w" table)
+    (modify-syntax-entry ?#  "<" table)
+    (modify-syntax-entry ?\n ">" table)
+    table)
+  "Syntax table for `gl-conf-mode'.")
+
+
+(defvar gl-conf-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-n") #'gl-conf-find-next-repo)
+    (define-key map (kbd "C-c C-p") #'gl-conf-find-prev-repo)
+    (define-key map (kbd "C-c C-v") #'gl-conf-visit-include)
+    (define-key map (kbd "C-c C-l") #'gl-conf-list-repos)
+    (define-key map (kbd "C-c C-m") #'gl-conf-mark-repo)
+    (define-key map (kbd "C-c C-g") #'gl-conf-list-groups)
+    (define-key map (kbd "C-c C-h") #'gl-conf-context-help)
+    map)
+  "Keymap for `gl-conf-mode'.")
+
+
+;;;###autoload
+(define-derived-mode gl-conf-mode prog-mode "gitolite-conf"
   "Major mode for editing gitolite config files.
 
-Provides basic syntax highlighting (including detecting some
-malformed constructs) and some navigation functions Commands:
+Provides basic syntax highlighting (including detection of some
+malformed constructs) and basic navigation.
 
-key          binding                       description
----          -------                       -----------
-\\[gl-conf-find-next-repo]      gl-conf-find-next-repo        move to next repository definition.
-\\[gl-conf-find-prev-repo]      gl-conf-find-prev-repo        move to previous repository definition.
-\\[gl-conf-visit-include]      gl-conf-visit-include         go to the include file on the line where the cursor is.
-\\[gl-conf-list-repos]      gl-conf-list-repo             open a navigation window with all the repositories (hyperlink enabled).
-\\[gl-conf-mark-repo]      gl-conf-mark-repo             mark (select) the current repository and body.
-\\[gl-conf-list-groups]      gl-conf-list-groups           open a navigation window with all the repositories (hyperlink enabled).
-\\[gl-conf-context-help]      gl-conf-mark-repo             open gitolite help (context sensitive)."
+\\{gl-conf-mode-map}"
+  :group 'gl-conf
+  :syntax-table gl-conf--syntax-table
 
-  (interactive)
-  (kill-all-local-variables)
-  (setq major-mode 'gl-conf-mode)
-  (setq mode-name "gitolite-conf")
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
+  (setq-local indent-line-function #'gl-conf-indent)
 
-  (require 'thingatpt)
-
-  ;; Create the syntax table
-  (setq gl-conf-mode-syntax-table (make-syntax-table))
-  (set-syntax-table gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?_  "w" gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?@  "w" gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?# "<" gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?\n ">" gl-conf-mode-syntax-table)
-
-  ;; Setup font-lock mode, indentation and comment highlighting
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(gl-conf-font-lock-buffer))
-
-  (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'gl-conf-indent)
-
-  (make-local-variable 'comment-start)
-  (setq comment-start "#")
-
-  ;; to make searches case sensitive in some points in the code
+  ;; To make searches case sensitive in some points in the code.
   (make-local-variable 'case-fold-search)
 
-
-  ;; setup key bindings (C-c followed by control character are reserved for major modes by the conventions)
-  (local-set-key (kbd "C-c C-n") 'gl-conf-find-next-repo)
-  (local-set-key (kbd "C-c C-p") 'gl-conf-find-prev-repo)
-  (local-set-key (kbd "C-c C-v") 'gl-conf-visit-include)
-  (local-set-key (kbd "C-c C-l") 'gl-conf-list-repos)
-  (local-set-key (kbd "C-c C-m") 'gl-conf-mark-repo)
-  (local-set-key (kbd "C-c C-g") 'gl-conf-list-groups)
-  (local-set-key (kbd "C-c C-h") 'gl-conf-context-help)
+  (setq-local font-lock-defaults '(gl-conf-font-lock-buffer))
+  (font-lock-flush))
 
 
-  ;; Run user hooks.
-  (run-hooks 'gl-conf-mode-hook))
-
-
-;; Show the world what we have
 (provide 'gl-conf-mode)
-(provide 'gl-conf-find-next-repo)
-(provide 'gl-conf-find-prev-repo)
-(provide 'gl-conf-visit-include)
-(provide 'gl-conf-list-repos)
-(provide 'gl-conf-mark-repo)
-
 
 ;;; gl-conf-mode.el ends here
