@@ -267,67 +267,69 @@ Otherwise it will use 'occur', which searches only in the current file."
 		  (end-of-line)))
 )
 
-(defun open-url (url)
-  (interactive)
+
+(defun gl-conf--open-url (url)
+  "Open a URL with `w3m'."
   (let ((cur-buffer (get-buffer (buffer-name))))
-	(if (fboundp 'w3m-goto-url)
-		(progn
-		  (when (one-window-p t)
-			(split-window)
-			(set-window-buffer nil cur-buffer))
-		  (w3m-goto-url url))
+    (if (fboundp 'w3m-goto-url)
+        (progn
+          (when (one-window-p t)
+            (split-window)
+            (set-window-buffer nil cur-buffer))
+          (w3m-goto-url url))
+      (browse-url url))))
 
-	  (browse-url url)))
-
-  )
 
 (defun gl-conf-context-help ()
-  "Offer context-sensitive help. Currently it needs w3m emacs installed. It would be nice if it could fall back to another mechanism, if this is not available"
+  "Offer context-sensitive help.
+
+ Currently it needs `w3m' Emacs installed.  It would be nice if
+ it could fall back to another mechanism, if this is not
+ available."
   (interactive)
-  ;; we want to make this section case-sensitive
-  (setq old-case-fold-search case-fold-search)
-  (setq case-fold-search nil)
-  (setq cur-point (point)) ;; make a let
-  (save-excursion
-	;; are we in a group?
-	(if (and (word-at-point) (string-match "^@" (word-at-point)))
-		(progn (open-url "http://sitaramc.github.com/gitolite/bac.html#groups")
-			   (message "Opened help for group definition"))
-	  (beginning-of-line)
 
-	  ;; are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
-	  (cond
-	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
-		(open-url "http://sitaramc.github.com/gitolite/bac.html")
-		(message "Opened help for user / group assignment"))
+  ;; Ensure that this section is case-sensitive.
+  (let ((cur-point (point))
+        (case-fold-search nil))
+    (save-excursion
 
-	   ;; are we on a refex or right after it? (if there is a permission before and we are looking at some word)
-	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
-		(open-url "http://sitaramc.github.com/gitolite/bac.html#refex")
-		(message "Opened help for refex definition"))
+      ;; Are we in a group?
+      (if (and (word-at-point) (string-match "^@" (word-at-point)))
+          (progn (gl-conf--open-url "http://sitaramc.github.com/gitolite/bac.html#groups")
+                 (message "Opened help for group definition"))
+        (beginning-of-line)
 
-		  ;; are we in a permission code or right after it?
-	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
-		(open-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
-		(message "Opened help for permission values"))
+        ;; Are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
+        (cond
+         ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
+          (gl-conf--open-url "http://sitaramc.github.com/gitolite/bac.html")
+          (message "Opened help for user / group assignment"))
 
-	   ;; look for other things...
-	   ;; are we in a repo line?
-	   ((looking-at "[ \t]*repo" )
-		(open-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
-		(message "Opened help for repo"))
+         ;; Are we on a refex or right after it? (if there is a permission before and we are looking at some word)
+         ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
+          (gl-conf--open-url "http://sitaramc.github.com/gitolite/bac.html#refex")
+          (message "Opened help for refex definition"))
 
-	   ;; are we in an include line?
-	   ((looking-at "[ \t]*include")
-		(open-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
-		(message "Opened help for includes"))
-		 ;; not found anything? Open generic help
-	   (t
-		(open-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
-		(message "Not in any known context. Opened general help for gitolite.conf")))))
+         ;; Are we in a permission code or right after it?
+         ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
+          (gl-conf--open-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
+          (message "Opened help for permission values"))
 
-  (setq case-fold-search old-case-fold-search)
-  )
+         ;; Look for other things...
+         ;; Are we on a repo line?
+         ((looking-at "[ \t]*repo" )
+          (gl-conf--open-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
+          (message "Opened help for repo"))
+
+         ;; Are we in an include line?
+         ((looking-at "[ \t]*include")
+          (gl-conf--open-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
+          (message "Opened help for includes"))
+
+         ;; Not found anything? Open generic help
+         (t
+          (gl-conf--open-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
+          (message "Not in any known context. Opened general help for gitolite.conf")))))))
 
 
 ;;; Definition of constants for the font-lock functionality.
@@ -437,10 +439,6 @@ malformed constructs) and basic navigation.
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local indent-line-function #'gl-conf-indent)
-
-  ;; To make searches case sensitive in some points in the code.
-  (make-local-variable 'case-fold-search)
-
   (setq-local font-lock-defaults gl-conf--font-lock-keywords)
   (font-lock-flush))
 
