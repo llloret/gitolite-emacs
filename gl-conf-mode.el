@@ -330,21 +330,56 @@ Otherwise it will use 'occur', which searches only in the current file."
   )
 
 
+;;; Definition of constants for the font-lock functionality.
 
-;; Definition of constants for the font-lock functionality
-(defconst gl-conf-font-lock-buffer
-  (list '("^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]" 1 font-lock-keyword-face) ;; repository definition
-		'("^[ \t]*\\(include[ \t]+\\)" 1 font-lock-keyword-face) ;; include definition
-		'("^[ \t]*\\(-\\|R\\|RW\\+?C?D?M?\\)[ \t].*=" 1 font-lock-type-face) ;; permissions
-		'("^[ \t]*\\(config\\).*=" 1 font-lock-reference-face) ;; config
-		'("^[ \t]*\\(config.*\\)" 1 font-lock-warning-face) ;; config partial definition (warning)
-		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*=" 1 font-lock-variable-name-face) ;; group definition
-		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)" 1 font-lock-warning-face) ;; group wrong definition (warning)
-		'("[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)" 1 font-lock-variable-name-face) ;; group usage
-		'("^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?M?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*=" 1 font-lock-type-face)) ;; refexes
+(defconst gl-conf--repo-rx
+  "^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]"
+  "Regular expression to match repository definitions.")
 
-  "gl-conf mode syntax highlighting."
-  )
+(defconst gl-conf--include-rx
+  "^[ \t]*\\(include[ \t]+\\)"
+  "Regular expression to match inclusion statements.")
+
+(defconst gl-conf--permissions-rx
+  "^[ \t]*\\(-\\|R\\|RW\\+?C?D?M?\\)[ \t].*="
+  "Regular expression to match repository permissions.")
+
+(defconst gl-conf--refex-rx
+  "^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?M?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*="
+  "Regular expression to match `refexes'.")
+
+(defconst gl-conf--conf-rx
+  "^[ \t]*\\(config\\).*="
+  "Regular expression to match repository configuration.")
+
+(defconst gl-conf--partial-conf-rx
+  "^[ \t]*\\(config.*\\)"
+  "Regular expression to match partial repository configuration.")
+
+(defconst gl-conf--group-rx
+  "^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*="
+  "Regular expression to match group definitions.")
+
+(defconst gl-conf--group-warn-rx
+  "^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)"
+  "Regular expression to detect incorrectly defined groups.")
+
+(defconst gl-conf--group-use-rx
+  "[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)"
+  "Regular expression to match usage of groups variables.")
+
+
+(defconst gl-conf--font-lock-keywords
+  `(((,gl-conf--repo-rx 1 font-lock-keyword-face)
+     (,gl-conf--include-rx 1 font-lock-keyword-face)
+     (,gl-conf--permissions-rx 1 font-lock-type-face)
+     (,gl-conf--conf-rx 1 font-lock-reference-face)
+     (,gl-conf--partial-conf-rx 1 font-lock-warning-face)
+     (,gl-conf--group-rx 1 font-lock-variable-name-face)
+     (,gl-conf--group-warn-rx 1 font-lock-warning-face)
+     (,gl-conf--group-use-rx 1 font-lock-variable-name-face)
+     (,gl-conf--refex-rx 1 font-lock-type-face)))
+  "Syntax highlighting for gl-conf-mode.")
 
 
 ;;
@@ -406,7 +441,7 @@ malformed constructs) and basic navigation.
   ;; To make searches case sensitive in some points in the code.
   (make-local-variable 'case-fold-search)
 
-  (setq-local font-lock-defaults '(gl-conf-font-lock-buffer))
+  (setq-local font-lock-defaults gl-conf--font-lock-keywords)
   (font-lock-flush))
 
 
