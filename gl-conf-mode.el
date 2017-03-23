@@ -104,39 +104,41 @@
   "Indent current line as a gitolite configuration file."
   (interactive)
   (when gl-conf-auto-indent-enable
-	(if (bobp)
-		(gl-conf-indent-line-to 0)
-	  (let (cur-indent)
-		(save-excursion
-		  (beginning-of-line)
-		  (let ((point-start (point))
-				token)
+    (if (bobp)
+        (gl-conf-indent-line-to 0)
+      (let (cur-indent)
+        (save-excursion
+          (beginning-of-line)
+          (let ((start (point)))
 
-			;; Search backwards (if there is a repo definition, we indent, otherwise, we don't)
-			(if (re-search-backward gl-conf-regex-repo (point-min) t)
-				(setq cur-indent tab-width) (setq cur-indent 0))
+            ;; Search backwards and if there is a repo definition, we indent,
+            ;; otherwise, we don't.
+            (if (re-search-backward gl-conf-regex-repo (point-min) t)
+                (setq cur-indent tab-width)
+              (setq cur-indent 0))
 
-			(goto-char point-start)
+            (goto-char start)
 
-			;; Set indentation to zero if this is a repo block
-			(if (looking-at gl-conf-regex-repo)
-				(setq cur-indent 0))))
+            ;; Set indentation to zero if this is a repo block
+            (when (looking-at gl-conf-regex-repo)
+              (setq cur-indent 0))))
 
-		(gl-conf-indent-line-to cur-indent))))
+        (gl-conf-indent-line-to cur-indent))))
+
   (unless gl-conf-auto-indent-enable
-	(insert-tab))
-  )
+    (insert-tab)))
+
 
 (defun gl-conf-point-in-indendation ()
   "Check if point is within a strip of whitespace used as indentation."
   (string-match "^[ \\t]*$" (buffer-substring (point-at-bol) (point))))
+
 
 (defun gl-conf-indent-line-to (column)
   "Indent the current line to COLUMN."
   (if (gl-conf-point-in-indendation)
       (indent-line-to column)
     (save-excursion (indent-line-to column))))
-
 
 
 (defun gl-conf--occur-clean ()
