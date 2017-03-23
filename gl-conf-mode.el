@@ -94,8 +94,6 @@
 
 
 (defconst gl-conf-regex-repo "^[ \t]*repo[ \t]+")
-(defconst gl-conf-regex-include "^[ \t]*include[ \t]+\"\\(.*\\)\"")
-
 
 ;;; Definition of constants for the font-lock functionality.
 
@@ -104,7 +102,11 @@
   "Regular expression to match repository definitions.")
 
 (defconst gl-conf--include-rx
-  "^[ \t]*\\(include[ \t]+\\)"
+  (rx line-start
+      (* space)
+      (group-n 1 (or "include" "subconf"))
+      (+ space)
+      "\"" (group-n 2 (* nonl)) "\"")
   "Regular expression to match inclusion statements.")
 
 (defconst gl-conf--permissions-rx
@@ -254,11 +256,11 @@ buffer names."
 
           ;; Find all include statements in the current file.
           (goto-char (point-min))
-          (while (re-search-forward gl-conf-regex-include (point-max) t)
+          (while (re-search-forward gl-conf--include-rx (point-max) t)
 
             ;; Open the file and add it to the working set if not already seen.
             (cl-loop
-             with r = (find-file-noselect (match-string 1) t nil t)
+             with r = (find-file-noselect (match-string 2) t nil t)
              for b in (if (listp r) r (list r)) do
              (unless (or (memq b all)
                          (memq b wset)) ; Avoid infinite recursion.
@@ -273,7 +275,7 @@ buffer names."
   (interactive)
   (let (bufs)
     (beginning-of-line)
-    (if (not (re-search-forward gl-conf-regex-include (point-at-eol) t))
+    (if (not (re-search-forward gl-conf--include-rx (point-at-eol) t))
         (message "Not a include line")
       (setq bufs (find-file (match-string 1) t))
       (if (listp bufs)
@@ -307,7 +309,7 @@ navigates through the includes to find references in them as
 well; Otherwise it will use `occur', which searches only in the
 current file."
   (interactive)
-  (gl-conf-list-common "^[ \t]*repo[ \t]+.*"))
+  (gl-conf-list-common gl-conf-regex-repo))
 
 
 (defun gl-conf-list-groups ()
