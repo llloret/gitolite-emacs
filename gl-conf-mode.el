@@ -81,8 +81,21 @@
 (require 'thingatpt)
 
 
+(defgroup gl-conf nil
+  "Gitolite configuration editing."
+  :tag "Gitolite config files"
+  :prefix "gl-conf"
+  :group 'files)
+
+(defcustom gl-conf-auto-indent-enable nil
+  "Enable automatic indentation for gl-conf mode."
+  :type 'boolean
+  :group 'gl-conf)
+
+
 (defconst gl-conf-regex-repo "^[ \t]*repo[ \t]+")
 (defconst gl-conf-regex-include "^[ \t]*include[ \t]+\"\\(.*\\)\"")
+
 
 ;;
 ;; Indentation logic
@@ -395,20 +408,6 @@ current file."
      (,gl-conf--refex-rx 1 font-lock-type-face)))
   "Syntax highlighting for gl-conf-mode.")
 
-
-;;
-;; Customization to enable or disable automatic indentation
-;;
-(defgroup gl-conf nil
-  "Gitolite configuration editing."
-  :tag "Gitolite config files"
-  :prefix "gl-conf"
-  :group 'files)
-
-(defcustom gl-conf-auto-indent-enable nil
-  "Enable automatic indentation for gl-conf mode."
-  :type 'boolean
-  :group 'gl-conf)
 
 ;;
 ;; gl-conf mode init function.
