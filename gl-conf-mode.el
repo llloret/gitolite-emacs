@@ -126,22 +126,20 @@
 
 
 
-(defun occur-clean ()
-  "Format the initial line so it does not show the regex and number of matches, but only the buffer name."
-  (interactive)
-  ;; Get the *Occur* buffer and clean the status headers so they are not so distracting
-  (if (get-buffer "*Occur*")
-      (save-excursion
-		(set-buffer (get-buffer "*Occur*"))
-		(goto-char (point-min))
-		(toggle-read-only 0)
-		(while (re-search-forward ".*in \\(buffer.*\\)"
-								  (point-max)
-								  t)
-		  (replace-match (match-string 1))
-		  (forward-line 1)))
-    (message "There is no buffer named \"*Occur*\"."))
-  )
+(defun gl-conf--occur-clean ()
+  "Reformat the `occur' output.
+
+Remove the he header line showing the regular expression and the
+buffer names."
+  (let ((buf "*Occur*")
+        (inhibit-read-only t))
+    (if (get-buffer buf)
+        (with-current-buffer buf
+          (goto-char (point-min))
+          (kill-line)
+          (while (re-search-forward ".*in \\(buffer.*\\)" (point-max) t)
+            (replace-match (match-string 1))))
+      (message "There is no buffer named \"%s\"." buf))))
 
 
 (defun gl-conf-find-next-repo ()
@@ -221,8 +219,8 @@
       (if (fboundp 'multi-occur)
           (multi-occur (filter-star-buffers buflist) regexp)
         (occur regexp)))
-    ;; Clean the navigation buffer that occur created
-    (occur-clean)))
+    ;; Clean the navigation buffer that occur created.
+    (gl-conf--occur-clean)))
 
 
 (defun gl-conf-list-repos ()
