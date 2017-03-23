@@ -110,7 +110,11 @@
   "Regular expression to match inclusion statements.")
 
 (defconst gl-conf--permissions-rx
-  "^[ \t]*\\(-\\|R\\|RW\\+?C?D?M?\\)[ \t].*="
+  (rx line-start
+      (* space)
+      (group (or "-" "C" "R"
+                 (and "RW" (? "C") (? "D") (? "M"))))
+      (* nonl) "=")
   "Regular expression to match repository permissions.")
 
 (defconst gl-conf--refex-rx
@@ -118,7 +122,7 @@
   "Regular expression to match `refexes'.")
 
 (defconst gl-conf--conf-rx
-  "^[ \t]*\\(config\\).*="
+  (rx line-start (* space) (group (or "config" "option")) (* nonl) "=")
   "Regular expression to match repository configuration.")
 
 (defconst gl-conf--partial-conf-rx
