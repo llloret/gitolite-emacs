@@ -143,29 +143,32 @@ buffer names."
 
 
 (defun gl-conf-find-next-repo ()
-  "Moves the cursor to the next repo definition in the current file. Returns t if next repo, nil otherwise."
+  "Move the cursor to the next repo definition in the current file.
+
+ Returns t if a repo definition was found, nil otherwise."
   (interactive)
   (push-mark)
   (let ((cur-point (point)))
-	(end-of-line nil)
-	(if (re-search-forward gl-conf-regex-repo nil t)
-		(progn (beginning-of-line nil) t)
-	  (message "No more repos")
-	  (goto-char cur-point)
-	  nil))
-  )
+    (end-of-line)
+    (if (re-search-forward gl-conf-regex-repo nil t)
+        (progn (beginning-of-line) t)
+      (message "No more repos")
+      (goto-char cur-point)
+      nil)))
+
 
 (defun gl-conf-find-prev-repo ()
-  "Moves the cursor to the previous repo definition on the current file. Returns t if previous repo, nil otherwise."
+  "Move the cursor to the previous repo definition on the current file.
+
+ Returns t if a repo definition was found, nil otherwise."
   (interactive)
   (push-mark)
   (let ((cur-point (point)))
-	(if (re-search-backward gl-conf-regex-repo nil t)
-		t
+    (if (re-search-backward gl-conf-regex-repo nil t)
+        t
       (message "No previous repo")
-	  (goto-char cur-point)
-	  nil))
-  )
+      (goto-char cur-point)
+      nil)))
 
 
 (defun gl-conf--visit-all-includes ()
