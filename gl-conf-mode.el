@@ -248,24 +248,24 @@ Otherwise it will use 'occur', which searches only in the current file."
   )
 
 (defun gl-conf-mark-repo ()
-  "Mark (select) the repo where the cursor is."
+  "Mark (select) the repo configuration line(s) based on where `point' is."
   (interactive)
-  (let ((cur-point (point)))
-	;; go to previous repo definition line, which is the one that contains the cursor and mark the position
-	(beginning-of-line nil)
-	(when (or (looking-at gl-conf-regex-repo) (gl-conf-find-prev-repo))
-		  (set-mark (point))
-		  ;; Now look for the next repo or end of buffer
-		  (if (not (gl-conf-find-next-repo))
-			(goto-char (point-max)))
-		  ;; and move back while the line is empty
-		  (if (not (eobp))
-			  (forward-line -1))
-		  (while (looking-at "^$")
-			(forward-line -1))
-		  ;; and then go to the end of line to select it
-		  (end-of-line)))
-)
+  ;; Go to previous repo definition line, which is the one that contains the
+  ;; cursor and mark the position
+  (beginning-of-line)
+  (when (or (looking-at gl-conf-regex-repo)
+            (gl-conf-find-prev-repo))
+    (set-mark (point))
+    ;; Now look for the next repo or end of buffer...
+    (if (not (gl-conf-find-next-repo))
+        (goto-char (point-max)))
+    ;; ...and move back while the line is empty...
+    (if (not (eobp))
+        (forward-line -1))
+    (while (looking-at "^$")
+      (forward-line -1))
+    ;; ...and then go to the end of line to select it.
+    (end-of-line)))
 
 
 (defun gl-conf--open-url (url)
