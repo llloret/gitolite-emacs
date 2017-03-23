@@ -168,16 +168,32 @@ buffer names."
   )
 
 
-;; This function opens all the include files referenced in the current buffer
-(defun gl-conf-visit-all-includes ()
-  "Visits all the include files referenced in this file. It will follow wildcard filenames."
-  (interactive)
+(defun gl-conf--visit-all-includes ()
+  "Visits all the include files recursively.
+
+ Note that this function will follow wildcard file-names."
   (save-excursion
     ;; scan the file for include directives
-    (beginning-of-buffer)
-    (while (re-search-forward gl-conf-regex-include (point-max) t)
-      (find-file-noselect (match-string 1) t nil t)))
-  )
+    (let ((all)
+          (buf)
+          (wset (list (current-buffer))))
+      (while wset
+        (setq buf (pop wset))
+        (push buf all)
+        (with-current-buffer buf
+
+          ;; Find all include statements in the current file.
+          (goto-char (point-min))
+          (while (re-search-forward gl-conf-regex-include (point-max) t)
+
+            ;; Open the file and add it to the working set if not already seen.
+            (cl-loop
+             with r = (find-file-noselect (match-string 1) t nil t)
+             for b in (if (listp r) r (list r)) do
+             (unless (or (memq b all)
+                         (memq b wset)) ; Avoid infinite recursion.
+               (push b wset))))))
+      all)))
 
 
 (defun gl-conf-visit-include ()
@@ -196,28 +212,15 @@ buffer names."
 		(gl-conf-mode))))
   )
 
-;; conditional predicate that tells whether a buffer name starts with a *
-(defun buffer-starts-with-star (buf)
-  (not (string-match "^*" (buffer-name buf)))
-  )
-
-;; returns a buffer list without the buffers that start with *
-(defun filter-star-buffers (lst)
-  (delq nil
-		(mapcar (lambda (x) (and (funcall 'buffer-starts-with-star x) x)) lst))
-  )
-
 
 (defun gl-conf-list-common (regexp)
   "List all occurrences of a specified REGEXP with hyperlinks."
   (save-excursion
     ;; open the included files
-    (gl-conf-visit-all-includes)
-    (let ((buflist (buffer-list)))
-      ;; Before calling multi-occur, filter out special buffers starting with *
-      ;; If multi-occur is not found fallback to occur
-      (if (fboundp 'multi-occur)
-          (multi-occur (filter-star-buffers buflist) regexp)
+    (let ((bufs (gl-conf--visit-all-includes)))
+      ;; If multi-occur is not found fallback to occur.
+      (if (fboundp #'multi-occur)
+          (multi-occur bufs regexp)
         (occur regexp)))
     ;; Clean the navigation buffer that occur created.
     (gl-conf--occur-clean)))
