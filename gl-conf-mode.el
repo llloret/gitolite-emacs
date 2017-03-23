@@ -295,41 +295,43 @@ Otherwise it will use 'occur', which searches only in the current file."
 
       ;; Are we in a group?
       (if (and (word-at-point) (string-match "^@" (word-at-point)))
-          (progn (gl-conf--open-url "http://sitaramc.github.com/gitolite/bac.html#groups")
+          (progn (gl-conf--open-url "http://gitolite.com/gitolite/conf/#group-definitions")
                  (message "Opened help for group definition"))
         (beginning-of-line)
 
-        ;; Are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
+        ;; Are we on the right side of an assignment with a permission at the
+        ;; beginning (this means that we are in the users / groups part)?
         (cond
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
-          (gl-conf--open-url "http://sitaramc.github.com/gitolite/bac.html")
-          (message "Opened help for user / group assignment"))
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#access-rules")
+          (message "Opened help for access rules"))
 
-         ;; Are we on a refex or right after it? (if there is a permission before and we are looking at some word)
+         ;; Are we on a refex or right after it? (if there is a permission
+         ;; before and we are looking at some word)
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
-          (gl-conf--open-url "http://sitaramc.github.com/gitolite/bac.html#refex")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#the-refex-field")
           (message "Opened help for refex definition"))
 
          ;; Are we in a permission code or right after it?
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
-          (gl-conf--open-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
-          (message "Opened help for permission values"))
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf-2/#access-control-rule-matching")
+          (message "Opened help for access control rule matchings"))
 
          ;; Look for other things...
          ;; Are we on a repo line?
          ((looking-at "[ \t]*repo" )
-          (gl-conf--open-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
+          (gl-conf--open-url "http://gitolite.com/gitolite/basic-admin/#add-remove-and-rename-repos")
           (message "Opened help for repo"))
 
          ;; Are we in an include line?
          ((looking-at "[ \t]*include")
-          (gl-conf--open-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#include-files")
           (message "Opened help for includes"))
 
          ;; Not found anything? Open generic help
          (t
-          (gl-conf--open-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
-          (message "Not in any known context. Opened general help for gitolite.conf")))))))
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/")
+          (message "Not in any known context. Opened general help section")))))))
 
 
 ;;; Definition of constants for the font-lock functionality.
