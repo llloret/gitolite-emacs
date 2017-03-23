@@ -209,43 +209,49 @@
 		(mapcar (lambda (x) (and (funcall 'buffer-starts-with-star x) x)) lst))
   )
 
-(defun gl-conf-list-common (regex)
-  (interactive)
+
+(defun gl-conf-list-common (regexp)
+  "List all occurrences of a specified REGEXP with hyperlinks."
   (save-excursion
     ;; open the included files
     (gl-conf-visit-all-includes)
-	(let ((buflist (buffer-list)))
-	  ;; Before calling multi-occur, filter out special buffers starting with *
-	  ;; If multi-occur is not found fallback to occur
-	(if (fboundp 'multi-occur)
-		(multi-occur (filter-star-buffers buflist) regex)
-	  (occur regex)))
-	;; Clean the navigation buffer that occur created
-    (occur-clean)
-    )
-  )
+    (let ((buflist (buffer-list)))
+      ;; Before calling multi-occur, filter out special buffers starting with *
+      ;; If multi-occur is not found fallback to occur
+      (if (fboundp 'multi-occur)
+          (multi-occur (filter-star-buffers buflist) regexp)
+        (occur regexp)))
+    ;; Clean the navigation buffer that occur created
+    (occur-clean)))
 
 
 (defun gl-conf-list-repos ()
-  "Opens another window with a list of the repos that were found. It supports hyperlinking, so hitting RET on there will
-take you to the occurrence.
+  "Open a window with a list of all repos for the configuration file(s).
 
-In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
-Otherwise it will use 'occur', which searches only in the current file."
+ The new window supports hyperlinking, so hitting RET on there
+will take you to the occurrence.
+
+In recent Emacs versions, it will use 'multi-occur', so it
+navigates through the includes to find references in them as
+well; Otherwise it will use `occur', which searches only in the
+current file."
   (interactive)
-  (gl-conf-list-common "^[ \t]*repo[ \t]+.*")
-  )
+  (gl-conf-list-common "^[ \t]*repo[ \t]+.*"))
 
 
 (defun gl-conf-list-groups ()
-  "Opens another window with a list of the group definitions that were found. It supports hyperlinking, so hitting RET on there will
-take you to the occurrence.
+  "Open a window with a list of all group definitions.
 
-In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
-Otherwise it will use 'occur', which searches only in the current file."
+ The new window supports hyperlinking, so hitting RET on there
+will take you to the occurrence.
+
+In recent Emacs versions, it will use 'multi-occur', so it
+navigates through the includes to find references in them as
+well; Otherwise it will use 'occur', which searches only in the
+current file."
   (interactive)
-  (gl-conf-list-common "^[ \t]*@[A-Za-z0-9][A-Za-z0-9-_.]+")
-  )
+  (gl-conf-list-common "^[ \t]*@[A-Za-z0-9][A-Za-z0-9-_.]+"))
+
 
 (defun gl-conf-mark-repo ()
   "Mark (select) the repo configuration line(s) based on where `point' is."
