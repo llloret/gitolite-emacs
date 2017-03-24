@@ -134,15 +134,27 @@
   "Regular expression to match partial repository configuration.")
 
 (defconst gl-conf--group-rx
-  "^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*="
+  (rx line-start (* space)
+      (group-n 1 "@"
+               (any "a-zA-Z0-9")
+               (* (any "a-zA-Z0-9_.-")))
+      (* space) "=")
   "Regular expression to match group definitions.")
 
 (defconst gl-conf--group-warn-rx
-  "^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)"
+  (rx line-start (* space)
+      (group-n 1 "@"
+               (any "a-zA-Z0-9")
+               (* (any "a-zA-Z0-9_.-")))
+      (* nonl))
   "Regular expression to detect incorrectly defined groups.")
 
 (defconst gl-conf--group-use-rx
-  "[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)"
+  (rx (or space "=")
+      (* space)
+      (group-n 1 "@"
+               (any "a-zA-Z0-9")
+               (* (any "a-zA-Z0-9_.-"))))
   "Regular expression to match usage of groups variables.")
 
 (defconst gl-conf--roles-rx
