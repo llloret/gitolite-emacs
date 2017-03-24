@@ -417,58 +417,6 @@ current file."
           (message "Not in any known context. Opened general help section")))))))
 
 
-;;; Definition of constants for the font-lock functionality.
-
-(defconst gl-conf--repo-rx
-  "^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]"
-  "Regular expression to match repository definitions.")
-
-(defconst gl-conf--include-rx
-  "^[ \t]*\\(include[ \t]+\\)"
-  "Regular expression to match inclusion statements.")
-
-(defconst gl-conf--permissions-rx
-  "^[ \t]*\\(-\\|R\\|RW\\+?C?D?M?\\)[ \t].*="
-  "Regular expression to match repository permissions.")
-
-(defconst gl-conf--refex-rx
-  "^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?M?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*="
-  "Regular expression to match `refexes'.")
-
-(defconst gl-conf--conf-rx
-  "^[ \t]*\\(config\\).*="
-  "Regular expression to match repository configuration.")
-
-(defconst gl-conf--partial-conf-rx
-  "^[ \t]*\\(config.*\\)"
-  "Regular expression to match partial repository configuration.")
-
-(defconst gl-conf--group-rx
-  "^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*="
-  "Regular expression to match group definitions.")
-
-(defconst gl-conf--group-warn-rx
-  "^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)"
-  "Regular expression to detect incorrectly defined groups.")
-
-(defconst gl-conf--group-use-rx
-  "[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)"
-  "Regular expression to match usage of groups variables.")
-
-
-(defconst gl-conf--font-lock-keywords
-  `(((,gl-conf--repo-rx 1 font-lock-keyword-face)
-     (,gl-conf--include-rx 1 font-lock-keyword-face)
-     (,gl-conf--permissions-rx 1 font-lock-type-face)
-     (,gl-conf--conf-rx 1 font-lock-reference-face)
-     (,gl-conf--partial-conf-rx 1 font-lock-warning-face)
-     (,gl-conf--group-rx 1 font-lock-variable-name-face)
-     (,gl-conf--group-warn-rx 1 font-lock-warning-face)
-     (,gl-conf--group-use-rx 1 font-lock-variable-name-face)
-     (,gl-conf--refex-rx 1 font-lock-type-face)))
-  "Syntax highlighting for gl-conf-mode.")
-
-
 ;;
 ;; gl-conf mode init function.
 ;;
