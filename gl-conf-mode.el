@@ -321,7 +321,8 @@ buffer names."
   "List all occurrences of a specified REGEXP with hyperlinks."
   (save-excursion
     ;; open the included files
-    (let ((bufs (gl-conf--visit-all-includes)))
+    (let ((bufs (gl-conf--visit-all-includes))
+          (inhibit-message t))
       ;; If multi-occur is not found fallback to occur.
       (if (fboundp #'multi-occur)
           (multi-occur bufs regexp)
@@ -355,7 +356,7 @@ navigates through the includes to find references in them as
 well; Otherwise it will use 'occur', which searches only in the
 current file."
   (interactive)
-  (gl-conf-list-common "^[ \t]*@[A-Za-z0-9][A-Za-z0-9-_.]+"))
+  (gl-conf-list-common gl-conf--group-rx))
 
 
 (defun gl-conf-mark-repo ()
