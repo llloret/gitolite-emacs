@@ -98,7 +98,11 @@
 ;;; Definition of constants for the font-lock functionality.
 
 (defconst gl-conf--repo-rx
-  "^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]"
+  (rx line-start
+      (* space) (group-n 1 "repo") (* space)
+      (group-n 2 (+ (any "@a-zA-Z0-9")
+                    (+ (any "a-zA-Z0-9[]_.*/-"))
+                    (* space))))
   "Regular expression to match repository definitions.")
 
 (defconst gl-conf--include-rx
@@ -143,7 +147,8 @@
 
 
 (defconst gl-conf--font-lock-keywords
-  `(((,gl-conf--repo-rx 1 font-lock-keyword-face)
+  `(((,gl-conf--repo-rx (1 font-lock-keyword-face)
+                 (2 font-lock-function-name-face))
      (,gl-conf--include-rx 1 font-lock-keyword-face)
      (,gl-conf--permissions-rx 1 font-lock-type-face)
      (,gl-conf--conf-rx 1 font-lock-reference-face)
@@ -313,7 +318,7 @@ navigates through the includes to find references in them as
 well; Otherwise it will use `occur', which searches only in the
 current file."
   (interactive)
-  (gl-conf-list-common gl-conf-regex-repo))
+  (gl-conf-list-common gl-conf--repo-rx))
 
 
 (defun gl-conf-list-groups ()
