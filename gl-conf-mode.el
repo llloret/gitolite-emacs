@@ -1,5 +1,40 @@
 ;; gl-conf-mode.el --- Mode for editing gitolite config files -*- lexical-binding: t -*-
 ;;
+;;
+;; Copyright (C) 2011-2017 Luis Lloret
+;;
+;; Author: Luis Lloret
+;; URL: https://github.com/llloret/gitolite-emacs
+;; Keywords: git, gitolite, languages
+;; Version: 0.3
+;; Package-Requires: ((emacs "24"))
+;;
+;;
+;; This file is not part of GNU Emacs.
+;;
+;;; License:
+;;
+;; Permission is hereby granted, free of charge, to any person obtaining
+;; a copy of this software and associated documentation files (the
+;; "Software"), to deal in the Software without restriction, including
+;; without limitation the rights to use, copy, modify, merge, publish,
+;; distribute, sublicense, and/or sell copies of the Software, and to
+;; permit persons to whom the Software is furnished to do so, subject to
+;; the following conditions:
+;;
+;; The above copyright notice and this permission notice shall be
+;; included in all copies or substantial portions of the Software.
+;;
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+;; OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+;; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+;; WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+;;
+;;
 ;;; Commentary:
 ;;
 ;; Provides navigation utilities, syntax highlighting and indentation for
@@ -28,8 +63,9 @@
 ;; - open a navigation window with all the defined groups (hyperlink enabled): C-c C-g
 ;; - offer context sentitive help linking to the original web documentation: C-c C-h
 ;;
-;; For the context sensitive help it can detect different positions, and will offer
-;; help on that topic:
+;; For the context sensitive help it can detect different positions, and will
+;; offer help on that topic:
+;;
 ;;    - repo line
 ;;    - include line
 ;;    - permissions (R/RW/RWC/...)
@@ -37,45 +73,18 @@
 ;;    - user or group permissions
 ;;    - groups
 ;;    - anything else (offer generic gitolite.conf help)
-
+;;
 ;; The help uses the main gitolite web documentation, linking directly into it
 ;; with a browser.
-;; If the Emacs w3m module is available in the system, it will be used to open
+;; If the Emacs `w3m' module is available in the system, it will be used to open
 ;; the help inside Emacs, otherwise, the Emacs configured external browser will
 ;; be launched (Emacs variable `browse-url-browser-function')
-;;
 ;;
 ;; Please note, that while it is not required by the license, I would
 ;; sincerely appreciate if you sent me enhancements / bugfixes you make
 ;; to integrate them in the master repo and make those changes accessible
 ;; to more people
 ;;
-;; Now the MIT license block (this enables you to use this code in a
-;; very liberal manner)
-;;
-;;
-;; Copyright (c) 2011 Luis Lloret
-;;
-;; Permission is hereby granted, free of charge, to any person obtaining
-;; a copy of this software and associated documentation files (the
-;; "Software"), to deal in the Software without restriction, including
-;; without limitation the rights to use, copy, modify, merge, publish,
-;; distribute, sublicense, and/or sell copies of the Software, and to
-;; permit persons to whom the Software is furnished to do so, subject to
-;; the following conditions:
-;;
-;; The above copyright notice and this permission notice shall be
-;; included in all copies or substantial portions of the Software.
-;;
-;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-;; OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-;; NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-;; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-;; WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-;; OTHER DEALINGS IN THE SOFTWARE.
-
 ;;; Code:
 
 (require 'thingatpt)
