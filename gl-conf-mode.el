@@ -145,10 +145,15 @@
   "[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)"
   "Regular expression to match usage of groups variables.")
 
+(defconst gl-conf--roles-rx
+  (rx (or "CREATOR" "WRITERS" "READERS"))
+  "Regular expression to match permission constants for wild repos.")
+
 
 (defconst gl-conf--font-lock-keywords
   `(((,gl-conf--repo-rx (1 font-lock-keyword-face)
                  (2 font-lock-function-name-face))
+     (,gl-conf--roles-rx 0 font-lock-constant-face t)
      (,gl-conf--include-rx 1 font-lock-keyword-face)
      (,gl-conf--permissions-rx 1 font-lock-type-face)
      (,gl-conf--conf-rx 1 font-lock-reference-face)
