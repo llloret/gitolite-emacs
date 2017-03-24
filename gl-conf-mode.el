@@ -497,6 +497,10 @@ current file."
 
 
 ;;;###autoload
+(add-to-list 'auto-mode-alist '("gitolite.conf\\'" . gl-conf-mode))
+
+
+;;;###autoload
 (define-derived-mode gl-conf-mode prog-mode "gitolite-conf"
   "Major mode for editing gitolite config files.
 
