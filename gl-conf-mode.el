@@ -93,8 +93,6 @@
   :group 'gl-conf)
 
 
-(defconst gl-conf-regex-repo "^[ \t]*repo[ \t]+")
-
 ;;; Definition of constants for the font-lock functionality.
 
 (defconst gl-conf--repo-rx
@@ -199,14 +197,14 @@
 
             ;; Search backwards and if there is a repo definition, we indent,
             ;; otherwise, we don't.
-            (if (re-search-backward gl-conf-regex-repo (point-min) t)
+            (if (re-search-backward gl-conf--repo-rx (point-min) t)
                 (setq cur-indent tab-width)
               (setq cur-indent 0))
 
             (goto-char start)
 
             ;; Set indentation to zero if this is a repo block
-            (when (looking-at gl-conf-regex-repo)
+            (when (looking-at gl-conf--repo-rx)
               (setq cur-indent 0))))
 
         (gl-conf-indent-line-to cur-indent))))
@@ -251,7 +249,7 @@ buffer names."
   (push-mark)
   (let ((cur-point (point)))
     (end-of-line)
-    (if (re-search-forward gl-conf-regex-repo nil t)
+    (if (re-search-forward gl-conf--repo-rx nil t)
         (progn (beginning-of-line) t)
       (message "No more repos")
       (goto-char cur-point)
@@ -265,7 +263,7 @@ buffer names."
   (interactive)
   (push-mark)
   (let ((cur-point (point)))
-    (if (re-search-backward gl-conf-regex-repo nil t)
+    (if (re-search-backward gl-conf--repo-rx nil t)
         t
       (message "No previous repo")
       (goto-char cur-point)
@@ -360,12 +358,12 @@ current file."
 
 
 (defun gl-conf-mark-repo ()
-  "Mark (select) the repo configuration line(s) based on where `point' is."
+  "Mark everything between the previous repo definition and the next one."
   (interactive)
   ;; Go to previous repo definition line, which is the one that contains the
   ;; cursor and mark the position
   (beginning-of-line)
-  (when (or (looking-at gl-conf-regex-repo)
+  (when (or (looking-at gl-conf--repo-rx)
             (gl-conf-find-prev-repo))
     (set-mark (point))
     ;; Now look for the next repo or end of buffer...
