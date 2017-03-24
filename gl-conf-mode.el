@@ -183,7 +183,7 @@
   `(((,gl-conf--repo-rx (1 font-lock-keyword-face)
                  (2 font-lock-function-name-face))
      (,gl-conf--roles-rx 0 font-lock-constant-face t)
-     (,gl-conf--include-rx 1 font-lock-keyword-face)
+     (,gl-conf--include-rx 1 font-lock-preprocessor-face)
      (,gl-conf--permissions-rx 1 font-lock-type-face)
      (,gl-conf--conf-rx 1 font-lock-reference-face)
      (,gl-conf--partial-conf-rx 1 font-lock-warning-face)
