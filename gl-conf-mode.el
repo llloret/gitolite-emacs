@@ -112,8 +112,8 @@
 (defconst gl-conf--permissions-rx
   (rx line-start
       (* space)
-      (group (or "-" "C" "R"
-                 (and "RW" (? "C") (? "D") (? "M"))))
+      (group (or (and "RW" (? "+") (? "C") (? "D") (? "M"))
+                 "-" "C" "R"))
       (* nonl) "=")
   "Regular expression to match repository permissions.")
 
