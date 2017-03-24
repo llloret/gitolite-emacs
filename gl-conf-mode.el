@@ -122,7 +122,13 @@
   "Regular expression to match repository permissions.")
 
 (defconst gl-conf--refex-rx
-  "^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?M?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*="
+  (rx line-start
+      (* space)
+      (or (and "RW" (? "+") (? "C") (? "D") (? "M"))
+          "-" "C" "R")
+      (+ space)
+      (group (+ (or word (any "/[]-"))))
+      (* space) "=")
   "Regular expression to match `refexes'.")
 
 (defconst gl-conf--conf-rx
