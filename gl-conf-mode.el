@@ -1,4 +1,4 @@
-;; gl-conf-mode.el --- Mode for editing gitolite config files -*- lexical-binding: t -*-
+;;; gl-conf-mode.el --- Mode for editing gitolite config files -*- lexical-binding: t -*-
 ;;
 ;;
 ;; Copyright (C) 2011-2017 Luis Lloret
