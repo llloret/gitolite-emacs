@@ -101,6 +101,10 @@
   :type 'boolean
   :group 'gl-conf)
 
+(defcustom gl-conf-indent-offset 4
+  "The default indentation offset for this mode."
+  :type 'integer
+  :group 'gl-conf)
 
 ;;; Definition of constants for the font-lock functionality.
 
@@ -207,7 +211,7 @@
             ;; Search backwards and if there is a repo definition, we indent,
             ;; otherwise, we don't.
             (if (re-search-backward gl-conf--repo-rx (point-min) t)
-                (setq cur-indent tab-width)
+                (setq cur-indent gl-conf-indent-offset)
               (setq cur-indent 0))
 
             (goto-char start)
@@ -219,7 +223,8 @@
         (gl-conf-indent-line-to cur-indent))))
 
   (unless gl-conf-auto-indent-enable
-    (insert-tab)))
+    (indent-line-to (+ (current-column)
+                       gl-conf-indent-offset))))
 
 
 (defun gl-conf-point-in-indendation ()
