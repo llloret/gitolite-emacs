@@ -147,7 +147,7 @@
   "Regular expression to match repository configuration.")
 
 (defconst gl-conf--partial-conf-rx
-  "^[ \t]*\\(config.*\\)"
+  (rx line-start (* space) (group (or "config" "option")) (* nonl))
   "Regular expression to match partial repository configuration.")
 
 (defconst gl-conf--group-rx
