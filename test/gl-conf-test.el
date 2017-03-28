@@ -12,7 +12,7 @@
 
 (defun gl-conf--face-p (pos faces)
   "Return non-nil if any of the faces at POS is present in FACES."
-  (let ((f (get-text-property pos 'face)))
+  (let ((f (or (get-text-property pos 'face) (list 'default))))
     (cl-intersection
      (if (not (listp f))
          (list f)
@@ -28,28 +28,81 @@ in FACES for this test to pass."
   (cl-every #'identity (cl-mapcar #'gl-conf--face-p locations faces)))
 
 
-(defun gl-conf--test-mode (file mode locations faces)
-  "Test enabling and disabling `gl-conf-mode' in FILE with major MODE.
+(defun gl-conf--test-mode (buffer locations faces)
+  "Test enabling `gl-conf-mode' in BUFFER.
 
 The nth point in LOCATIONS is supposed to be matched with the nth
 face in FACES when enabled.  When disabled, it checks that the
 faces have been removed."
-  (with-temp-buffer
-    (insert-file-contents file)
+  (with-current-buffer buffer
     (global-font-lock-mode t)
     (font-lock-mode t)
-    (funcall mode)
+    (gl-conf-mode)
     (font-lock-fontify-buffer)
     (gl-conf--location-test locations faces)))
 
 
-(ert-deftest gl-conf--conf-file-test ()
-  (let* ((dir (file-name-as-directory gl-conf-test/test-path))
-         (file (concat dir "gitolite.conf"))
-         (locations '(42 96))
-         (faces '(font-lock-variable-name-face
-                  font-lock-keyword-face)))
-    (should (gl-conf--test-mode file #'gl-conf-mode locations faces))))
+(defun gl-conf--find-locations (buffer strings)
+  "Return the `point' locations in BUFFER indicated by STRINGS.
+
+STRINGS may contain any of:
+- A plain string -> First occurrence of this string in the buffer.
+- A list of a string and number N -> The NTH occurrence of the string.
+- Anything else -> 0."
+  (with-current-buffer buffer
+    (let ((min (point-min))
+          (max (point-max))
+          (case-fold-search nil))
+      (goto-char (point-min))
+      (cl-loop for v in strings
+               collect
+               (save-excursion
+                 (pcase v
+                   ((pred stringp)
+                    (search-forward v max t 1)
+                    (match-beginning 0))
+                   (`(,(and (pred stringp) s)
+                      ,(and (pred numberp) n))
+                    (search-forward s max t n)
+                    (match-beginning 0))
+                   (`(,_)
+                    0)))))))
+
+
+(ert-deftest gl-conf--test-font-lock-group ()
+  (let* ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+         (buf (find-file file))
+         (grp-strings '("@invalid-grp" "@staff" "@interns"
+                        ("@staff" 2) ("@staff" 3) ("@interns" 2)
+                        ("@g" 1) ("@g" 2)))
+         (faces `(font-lock-warning-face
+                  ,@(make-list 6 font-lock-variable-name-face)
+                  font-lock-function-name-face))
+         (locations (gl-conf--find-locations buf grp-strings)))
+    (should (gl-conf--test-mode buf locations faces))))
+
+
+(ert-deftest gl-conf--test-font-lock-repo ()
+  (let* ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+         (buf (find-file file))
+         (repo-strings (cl-loop for i from 1 to 10 collect (list "repo " i)))
+         (faces `(,@(make-list 9 font-lock-keyword-face) default))
+         (locations (gl-conf--find-locations buf repo-strings)))
+    (should (gl-conf--test-mode buf locations faces))))
+
+
+(ert-deftest gl-conf--test-font-lock-includes ()
+  (let* ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+         (buf (find-file file))
+         (strings '(("subconf" 2)
+                    ("include" 2)
+                    ("include" 3)
+                    ("include" 4)))
+         (faces (make-list 4 font-lock-preprocessor-face))
+         (locations (gl-conf--find-locations buf strings)))
+    (should (gl-conf--test-mode buf locations faces))))
+
+
 
 
 (provide 'gl-conf-test)
