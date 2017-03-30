@@ -315,18 +315,20 @@ buffer names."
 (defun gl-conf-visit-include ()
   "Visit the include file that is on the current line.
 
- Follows wildcards and opens the include(s) in `gl-conf-mode'."
+ Follows wildcards and opens the include(s) in `gl-conf-mode'.
+
+Returns a list of the visited buffers."
   (interactive)
   (let (bufs)
     (beginning-of-line)
     (if (not (re-search-forward gl-conf--include-rx (point-at-eol) t))
-        (message "Not a include line")
+        (progn (message "Not a include line") nil)
       (setq bufs (find-file (match-string 2) t))
-      (if (listp bufs)
-          (dolist (buf bufs)
-            (switch-to-buffer buf)
-            (gl-conf-mode))
-        (gl-conf-mode)))))
+      (setq bufs (if (listp bufs) bufs (list bufs)))
+      (dolist (buf bufs)
+        (switch-to-buffer buf)
+        (gl-conf-mode))
+      bufs)))
 
 
 (defun gl-conf-list-common (regexp)
