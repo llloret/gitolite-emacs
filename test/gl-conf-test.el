@@ -127,6 +127,31 @@ STRINGS may contain any of:
              buf-tst nil nil))))
 
 
+(ert-deftest gl-conf--test-visit-includes ()
+  (let* ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+         (buf  (find-file file))
+         (ans0 (expand-file-name "foo.conf" gl-conf-test/test-path))
+         (ans1 (expand-file-name "user-a.conf" gl-conf-test/test-path))
+         (ans2 (expand-file-name "user-b.conf" gl-conf-test/test-path))
+         visited
+         includes)
+
+    (with-current-buffer buf
+      (search-forward "subconf \"foo.conf\"" nil t 1)
+      (setq visited (gl-conf-visit-include))
+      (dolist (b visited)
+        (should (buffer-live-p b)))
+      (should (string= (buffer-file-name) ans0)))
+
+    (with-current-buffer buf
+      (search-forward "include \"user-*.conf\"" nil t 1)
+      (setq visited (gl-conf-visit-include))
+      (dolist (b visited includes)
+        (should (buffer-live-p b))
+        (setq includes (append includes (list (buffer-file-name b)))))
+      (should (cl-intersection includes (list ans1 ans2) :test #'string=)))))
+
+
 (provide 'gl-conf-test)
 
 ;;; gl-conf-test.el ends here
