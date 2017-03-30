@@ -321,7 +321,7 @@ buffer names."
     (beginning-of-line)
     (if (not (re-search-forward gl-conf--include-rx (point-at-eol) t))
         (message "Not a include line")
-      (setq bufs (find-file (match-string 1) t))
+      (setq bufs (find-file (match-string 2) t))
       (if (listp bufs)
           (dolist (buf bufs)
             (switch-to-buffer buf)
