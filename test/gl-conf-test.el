@@ -103,6 +103,28 @@ STRINGS may contain any of:
     (should (gl-conf--test-mode buf locations faces))))
 
 
+(ert-deftest gl-conf--test-list-groups ()
+  (let* ((file-ans (expand-file-name "list-repos.out" gl-conf-test/test-path))
+         (buf-ans  (find-file-literally file-ans))
+         (file-tst (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+         (buf-tst  (find-file file-tst)))
+    (with-current-buffer buf-tst
+      (gl-conf-list-groups))
+    (should (compare-buffer-substrings
+             buf-ans nil nil
+             buf-tst nil nil))))
+
+
+(ert-deftest gl-conf--test-list-repos ()
+  (let* ((file-ans (expand-file-name "list-repos.out" gl-conf-test/test-path))
+         (buf-ans  (find-file-literally file-ans))
+         (file-tst (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+         (buf-tst  (find-file file-tst)))
+    (with-current-buffer buf-tst
+      (gl-conf-list-repos))
+    (should (compare-buffer-substrings
+             buf-ans nil nil
+             buf-tst nil nil))))
 
 
 (provide 'gl-conf-test)
