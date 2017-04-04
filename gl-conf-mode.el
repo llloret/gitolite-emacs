@@ -429,35 +429,35 @@ current file."
         ;; beginning (this means that we are in the users / groups part)?
         (cond
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#access-rules")
-          (message "Opened help for access rules"))
+          (message "Opened help for access rules")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#access-rules"))
 
          ;; Are we on a refex or right after it? (if there is a permission
          ;; before and we are looking at some word)
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#the-refex-field")
-          (message "Opened help for refex definition"))
+          (message "Opened help for refex definition")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#the-refex-field"))
 
          ;; Are we in a permission code or right after it?
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf-2/#access-control-rule-matching")
-          (message "Opened help for access control rule matchings"))
+          (message "Opened help for access control rule matchings")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf-2/#access-control-rule-matching"))
 
          ;; Look for other things...
          ;; Are we on a repo line?
          ((looking-at "[ \t]*repo" )
-          (gl-conf--open-url "http://gitolite.com/gitolite/basic-admin/#add-remove-and-rename-repos")
-          (message "Opened help for repo"))
+          (message "Opened help for repo")
+          (gl-conf--open-url "http://gitolite.com/gitolite/basic-admin/#add-remove-and-rename-repos"))
 
          ;; Are we in an include line?
          ((looking-at "[ \t]*include")
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#include-files")
-          (message "Opened help for includes"))
+          (message "Opened help for includes")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#include-files"))
 
          ;; Not found anything? Open generic help
          (t
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/")
-          (message "Not in any known context. Opened general help section")))))))
+          (message "Not in any known context. Opened general help section")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/")))))))
 
 
 ;;

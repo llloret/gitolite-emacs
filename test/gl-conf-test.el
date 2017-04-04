@@ -69,6 +69,14 @@ STRINGS may contain any of:
                     0)))))))
 
 
+(defun gl-conf-looking-at-p-explain (regexp)
+  "Explain why we didn't match REGEXP."
+  (format "Actually looking at: '%s'"
+          (buffer-substring-no-properties (point) (point-at-eol))))
+
+(function-put #'looking-at-p 'ert-explainer #'gl-conf-looking-at-p-explain)
+
+
 (ert-deftest gl-conf--test-font-lock-group ()
   (let* ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
          (buf (find-file file))
@@ -150,6 +158,83 @@ STRINGS may contain any of:
         (should (buffer-live-p b))
         (setq includes (append includes (list (buffer-file-name b)))))
       (should (cl-intersection includes (list ans1 ans2) :test #'string=)))))
+
+
+(ert-deftest gl-conf--test-next-repo ()
+  (let ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+        (inhibit-message t)
+        (strings '("secret"
+                   "foss"
+                   "foo"
+                   "foo bar"
+                   "gitolite"
+                   "@g"
+                   "r2"
+                   "assignments/CREATOR/a\[[0-9\]\[0-9\]"
+                   "foo/CREATOR/\\[a-z\\]\\.\\.\\*")))
+    (with-current-buffer (find-file file)
+      (goto-char (point-min))
+      (cl-loop for str in strings do
+               (should (gl-conf-find-next-repo))
+               (should (looking-at-p (concat "repo[[:space:]]+" str))))
+      (should (not (gl-conf-find-next-repo))))))
+
+
+(ert-deftest gl-conf--test-prev-repo ()
+  (let ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+        (inhibit-message t)
+        (strings '("foo/CREATOR/\\[a-z\\]\\.\\.\\*"
+                   "assignments/CREATOR/a\[[0-9\]\[0-9\]"
+                   "r2"
+                   "@g"
+                   "gitolite"
+                   "foo bar"
+                   "foo"
+                   "foss"
+                   "secret")))
+    (with-current-buffer (find-file file)
+      (goto-char (point-max))
+      (cl-loop for str in strings do
+               (should (gl-conf-find-prev-repo))
+               (should (looking-at-p (concat "repo[[:space:]]+" str))))
+      (should (not (gl-conf-find-prev-repo))))))
+
+
+(ert-deftest gl-conf-test-context-help ()
+  (let ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+        (browse-url-browser-function #'browse-url-emacs)
+        (inhibit-message t)
+        (strings '(("repo" 1)
+                   ("include" 2)
+                   ("@staff" 1)
+                   ("alice" 2)
+                   ("RW+" 2)
+                   ("refs/tags/v[0-9]" 1))))
+    (with-current-buffer (find-file file)
+      (goto-char (point-min))
+      (should (gl-conf-context-help))
+      (cl-loop for location in (gl-conf--find-locations (current-buffer) strings)
+               do
+               (goto-char location)
+               (should (gl-conf-context-help))))))
+
+
+(ert-deftest gl-conf-test-mark-repo ()
+  (let ((file (expand-file-name "gitolite.conf" gl-conf-test/test-path))
+        (inhibit-message t)
+        beg
+        end)
+    (with-current-buffer (find-file file)
+      (goto-char (point-min))
+      (should (gl-conf-find-next-repo))
+      (setq beg (point))
+      (should (gl-conf-find-next-repo))
+      (skip-chars-backward " \t\n")
+      (setq end (point))
+      (gl-conf-mark-repo)
+      (should (string= (buffer-substring beg end)
+                       (buffer-substring (region-beginning)
+                                         (region-end)))))))
 
 
 (provide 'gl-conf-test)
