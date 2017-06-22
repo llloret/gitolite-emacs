@@ -1,58 +1,18 @@
-;; gitolite-conf-mode.el --- major-mode for editing gitolite config files
-;;
-;; Provides navigation utilities, syntax highlighting and indentation for
-;; gitolite configuration files (gitolite.conf)
-;;
-;; Add this code to your .emacs file to use the mode (and automatically
-;; open gitolite.conf files in this mode)
-;;
-;; (setq load-path (cons (expand-file-name "/directory/path/to/gitolite-conf-mode.el/") load-path))
-;; (require 'gl-conf-mode)
-;; (add-to-list 'auto-mode-alist '("gitolite\\.conf\\'" . gl-conf-mode))
-;;
-;; If the file you want to edit is not named gitolite.conf, use
-;; M-x gl-conf-mode, after opening the file
-;;
-;; Automatic indentation for this mode is disabled by default.
-;; If you want to enable it, go to Customization menu in emacs,
-;; then "Files", "Gitolite Config Files", and select the appropiate option.
-;;
-;; The interesting things you can do are:
-;; - move to next repository definition: C-c C-n
-;; - move to previous repository definition: C-c C-p
-;; - go to the include file on the line where the cursor is: C-c C-v
-;; - open a navigation window with all the repositories (hyperlink enabled): C-c C-l
-;; - mark the current repository and body: C-c C-m
-;; - open a navigation window with all the defined groups (hyperlink enabled): C-c C-g
-;; - offer context sentitive help linking to the original web documentation: C-c C-h
-;;
-;; For the context sensitive help it can detect different positions, and will offer
-;; help on that topic:
-;;    - repo line
-;;    - include line 
-;;    - permissions (R/RW/RWC/...)
-;;    - refexes (branches, ...)
-;;    - user or group permissions
-;;    - groups
-;;    - anything else (offer generic gitolite.conf help)
-
-;; The help uses the main gitolite web documentation, linking directly into it 
-;; with a browser.
-;; If the emacs w3m module is available in the system, it will be used to open 
-;; the help inside emacs, otherwise, the emacs configured external browser will 
-;; be launched (emacs variable "browse-url-browser-function")
+;;; gl-conf-mode.el --- Mode for editing gitolite config files -*- lexical-binding: t -*-
 ;;
 ;;
-;; Please note, that while it is not required by the license, I would
-;; sincerely appreciate if you sent me enhancements / bugfixes you make
-;; to integrate them in the master repo and make those changes accessible
-;; to more people
+;; Copyright (C) 2011-2017 Luis Lloret
 ;;
-;; Now the MIT license block (this enables you to use this code in a
-;; very liberal manner)
+;; Author: Luis Lloret
+;; URL: https://github.com/llloret/gitolite-emacs
+;; Keywords: git, gitolite, languages
+;; Version: 0.3
+;; Package-Requires: ((emacs "24"))
 ;;
 ;;
-;; Copyright (c) 2011 Luis Lloret
+;; This file is not part of GNU Emacs.
+;;
+;;; License:
 ;;
 ;; Permission is hereby granted, free of charge, to any person obtaining
 ;; a copy of this software and associated documentation files (the
@@ -68,14 +28,171 @@
 ;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 ;; OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+;; NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 ;; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 ;; WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 ;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 ;; OTHER DEALINGS IN THE SOFTWARE.
+;;
+;;
+;;; Commentary:
+;;
+;; Provides navigation utilities, syntax highlighting and indentation for
+;; gitolite configuration files (gitolite.conf)
+;;
+;; Add this code to your .emacs file to use the mode (and automatically
+;; open gitolite.conf files in this mode)
+;;
+;; (setq load-path (cons (expand-file-name "/directory/path/to/gitolite-conf-mode.el/") load-path))
+;; (require 'gl-conf-mode)
+;; (add-to-list 'auto-mode-alist '("gitolite\\.conf\\'" . gl-conf-mode))
+;;
+;; If the file you want to edit is not named gitolite.conf, use
+;; M-x gl-conf-mode, after opening the file
+;;
+;; Automatic indentation for this mode is disabled by default.
+;; If you want to enable it, go to Customization menu in Emacs,
+;; then "Files", "Gitolite Config Files", and select the appropiate option.
+;;
+;; The interesting things you can do are:
+;; - move to next repository definition: C-c C-n
+;; - move to previous repository definition: C-c C-p
+;; - go to the include file on the line where the cursor is: C-c C-v
+;; - open a navigation window with all the repositories (hyperlink enabled): C-c C-l
+;; - mark the current repository and body: C-c C-m
+;; - open a navigation window with all the defined groups (hyperlink enabled): C-c C-g
+;; - offer context sentitive help linking to the original web documentation: C-c C-h
+;;
+;; For the context sensitive help it can detect different positions, and will
+;; offer help on that topic:
+;;
+;;    - repo line
+;;    - include line
+;;    - permissions (R/RW/RWC/...)
+;;    - refexes (branches, ...)
+;;    - user or group permissions
+;;    - groups
+;;    - anything else (offer generic gitolite.conf help)
+;;
+;; The help uses the main gitolite web documentation, linking directly into it
+;; with a browser.
+;; If the Emacs `w3m' module is available in the system, it will be used to open
+;; the help inside Emacs, otherwise, the Emacs configured external browser will
+;; be launched (Emacs variable `browse-url-browser-function')
+;;
+;; Please note, that while it is not required by the license, I would
+;; sincerely appreciate if you sent me enhancements / bugfixes you make
+;; to integrate them in the master repo and make those changes accessible
+;; to more people
+;;
+;;; Code:
 
-(defconst gl-conf-regex-repo "^[ \t]*repo[ \t]+")
-(defconst gl-conf-regex-include "^[ \t]*include[ \t]+\"\\(.*\\)\"")
+(require 'thingatpt)
+
+
+(defgroup gl-conf nil
+  "Gitolite configuration editing."
+  :tag "Gitolite config files"
+  :prefix "gl-conf"
+  :group 'files)
+
+(defcustom gl-conf-auto-indent-enable nil
+  "Enable automatic indentation for gl-conf mode."
+  :type 'boolean
+  :group 'gl-conf)
+
+(defcustom gl-conf-indent-offset 4
+  "The default indentation offset for this mode."
+  :type 'integer
+  :group 'gl-conf)
+
+;;; Definition of constants for the font-lock functionality.
+
+(defconst gl-conf--repo-rx
+  (rx line-start
+      (* space) (group-n 1 "repo") (* space)
+      (group-n 2 (+ (any "@a-zA-Z0-9")
+                    (+ (any "a-zA-Z0-9[]_.*/-"))
+                    (* space))))
+  "Regular expression to match repository definitions.")
+
+(defconst gl-conf--include-rx
+  (rx line-start
+      (* space)
+      (group-n 1 (or "include" "subconf"))
+      (+ space)
+      "\"" (group-n 2 (* nonl)) "\"")
+  "Regular expression to match inclusion statements.")
+
+(defconst gl-conf--permissions-rx
+  (rx line-start
+      (* space)
+      (group (or (and "RW" (? "+") (? "C") (? "D") (? "M"))
+                 "-" "C" "R"))
+      (* nonl) "=")
+  "Regular expression to match repository permissions.")
+
+(defconst gl-conf--refex-rx
+  (rx line-start
+      (* space)
+      (or (and "RW" (? "+") (? "C") (? "D") (? "M"))
+          "-" "C" "R")
+      (+ space)
+      (group (+ (or word (any "/[]-"))))
+      (* space) "=")
+  "Regular expression to match `refexes'.")
+
+(defconst gl-conf--conf-rx
+  (rx line-start (* space) (group (or "config" "option")) (* nonl) "=")
+  "Regular expression to match repository configuration.")
+
+(defconst gl-conf--partial-conf-rx
+  (rx line-start (* space) (group (or "config" "option")) (* nonl))
+  "Regular expression to match partial repository configuration.")
+
+(defconst gl-conf--group-rx
+  (rx line-start (* space)
+      (group-n 1 "@"
+               (any "a-zA-Z0-9")
+               (* (any "a-zA-Z0-9_.-")))
+      (* space) "=")
+  "Regular expression to match group definitions.")
+
+(defconst gl-conf--group-warn-rx
+  (rx line-start (* space)
+      (group-n 1 "@"
+               (any "a-zA-Z0-9")
+               (* (any "a-zA-Z0-9_.-")))
+      (* nonl))
+  "Regular expression to detect incorrectly defined groups.")
+
+(defconst gl-conf--group-use-rx
+  (rx (or space "=")
+      (* space)
+      (group-n 1 "@"
+               (any "a-zA-Z0-9")
+               (* (any "a-zA-Z0-9_.-"))))
+  "Regular expression to match usage of groups variables.")
+
+(defconst gl-conf--roles-rx
+  (rx (or "CREATOR" "WRITERS" "READERS"))
+  "Regular expression to match permission constants for wild repos.")
+
+
+(defconst gl-conf--font-lock-keywords
+  `(((,gl-conf--repo-rx (1 font-lock-keyword-face)
+                 (2 font-lock-function-name-face))
+     (,gl-conf--roles-rx 0 font-lock-constant-face t)
+     (,gl-conf--include-rx 1 font-lock-preprocessor-face)
+     (,gl-conf--permissions-rx 1 font-lock-type-face)
+     (,gl-conf--conf-rx 1 font-lock-reference-face)
+     (,gl-conf--partial-conf-rx 1 font-lock-warning-face)
+     (,gl-conf--group-rx 1 font-lock-variable-name-face)
+     (,gl-conf--group-warn-rx 1 font-lock-warning-face)
+     (,gl-conf--group-use-rx 1 font-lock-variable-name-face)
+     (,gl-conf--refex-rx 1 font-lock-type-face)))
+  "Syntax highlighting for gl-conf-mode.")
+
 
 ;;
 ;; Indentation logic
@@ -84,31 +201,36 @@
   "Indent current line as a gitolite configuration file."
   (interactive)
   (when gl-conf-auto-indent-enable
-	(if (bobp)
-		(gl-conf-indent-line-to 0)
-	  (let (cur-indent)
-		(save-excursion
-		  (beginning-of-line)
-		  (let ((point-start (point))
-				token)
+    (if (bobp)
+        (gl-conf-indent-line-to 0)
+      (let (cur-indent)
+        (save-excursion
+          (beginning-of-line)
+          (let ((start (point)))
 
-			;; Search backwards (if there is a repo definition, we indent, otherwise, we don't)
-			(if (re-search-backward gl-conf-regex-repo (point-min) t)
-				(setq cur-indent tab-width) (setq cur-indent 0))
+            ;; Search backwards and if there is a repo definition, we indent,
+            ;; otherwise, we don't.
+            (if (re-search-backward gl-conf--repo-rx (point-min) t)
+                (setq cur-indent gl-conf-indent-offset)
+              (setq cur-indent 0))
 
-			(goto-char point-start)
+            (goto-char start)
 
-			;; Set indentation to zero if this is a repo block
-			(if (looking-at gl-conf-regex-repo)
-				(setq cur-indent 0))))
+            ;; Set indentation to zero if this is a repo block
+            (when (looking-at gl-conf--repo-rx)
+              (setq cur-indent 0))))
 
-		(gl-conf-indent-line-to cur-indent))))
+        (gl-conf-indent-line-to cur-indent))))
+
   (unless gl-conf-auto-indent-enable
-	(insert-tab))
-  )
+    (indent-line-to (+ (current-column)
+                       gl-conf-indent-offset))))
+
 
 (defun gl-conf-point-in-indendation ()
+  "Check if point is within a strip of whitespace used as indentation."
   (string-match "^[ \\t]*$" (buffer-substring (point-at-bol) (point))))
+
 
 (defun gl-conf-indent-line-to (column)
   "Indent the current line to COLUMN."
@@ -117,308 +239,276 @@
     (save-excursion (indent-line-to column))))
 
 
+(defun gl-conf--occur-clean ()
+  "Reformat the `occur' output.
 
-(defun occur-clean ()
-  "Format the initial line so it does not show the regex and number of matches, but only the buffer name."
-  (interactive)
-  ;; Get the *Occur* buffer and clean the status headers so they are not so distracting
-  (if (get-buffer "*Occur*")
-      (save-excursion
-		(set-buffer (get-buffer "*Occur*"))
-		(goto-char (point-min))
-		(toggle-read-only 0)
-		(while (re-search-forward ".*in \\(buffer.*\\)"
-								  (point-max)
-								  t)
-		  (replace-match (match-string 1))
-		  (forward-line 1)))
-    (message "There is no buffer named \"*Occur*\"."))
-  )
+Remove the he header line showing the regular expression and the
+buffer names."
+  (let ((buf "*Occur*")
+        (inhibit-read-only t))
+    (if (get-buffer buf)
+        (with-current-buffer buf
+          (goto-char (point-min))
+          (kill-line)
+          (while (re-search-forward ".*in \\(buffer.*\\)" (point-max) t)
+            (replace-match (match-string 1))))
+      (message "There is no buffer named \"%s\"." buf))))
 
 
 (defun gl-conf-find-next-repo ()
-  "Moves the cursor to the next repo definition in the current file. Returns t if next repo, nil otherwise."
+  "Move the cursor to the next repo definition in the current file.
+
+ Returns t if a repo definition was found, nil otherwise."
   (interactive)
   (push-mark)
   (let ((cur-point (point)))
-	(end-of-line nil)
-	(if (re-search-forward gl-conf-regex-repo nil t)
-		(progn (beginning-of-line nil) t)
-	  (message "No more repos")
-	  (goto-char cur-point)
-	  nil))
-  )
+    (end-of-line)
+    (if (re-search-forward gl-conf--repo-rx nil t)
+        (progn (beginning-of-line) t)
+      (message "No more repos")
+      (goto-char cur-point)
+      nil)))
+
 
 (defun gl-conf-find-prev-repo ()
-  "Moves the cursor to the previous repo definition on the current file. Returns t if previous repo, nil otherwise."
+  "Move the cursor to the previous repo definition on the current file.
+
+ Returns t if a repo definition was found, nil otherwise."
   (interactive)
   (push-mark)
   (let ((cur-point (point)))
-	(if (re-search-backward gl-conf-regex-repo nil t)
-		t
+    (if (re-search-backward gl-conf--repo-rx nil t)
+        t
       (message "No previous repo")
-	  (goto-char cur-point)
-	  nil))
-  )
+      (goto-char cur-point)
+      nil)))
 
 
-;; This function opens all the include files referenced in the current buffer
-(defun gl-conf-visit-all-includes ()
-  "Visits all the include files referenced in this file. It will follow wildcard filenames."
-  (interactive)
+(defun gl-conf--visit-all-includes ()
+  "Visits all the include files recursively.
+
+ Note that this function will follow wildcard file-names."
   (save-excursion
     ;; scan the file for include directives
-    (beginning-of-buffer)
-    (while (re-search-forward gl-conf-regex-include (point-max) t)
-      (find-file-noselect (match-string 1) t nil t)))
-  )
+    (let ((all)
+          (buf)
+          (wset (list (current-buffer))))
+      (while wset
+        (setq buf (pop wset))
+        (push buf all)
+        (with-current-buffer buf
+
+          ;; Find all include statements in the current file.
+          (goto-char (point-min))
+          (while (re-search-forward gl-conf--include-rx (point-max) t)
+
+            ;; Open the file and add it to the working set if not already seen.
+            (cl-loop
+             with r = (find-file-noselect (match-string 2) t nil t)
+             for b in (if (listp r) r (list r)) do
+             (unless (or (memq b all)
+                         (memq b wset)) ; Avoid infinite recursion.
+               (push b wset))))))
+      all)))
 
 
 (defun gl-conf-visit-include ()
-  "Visit the include file that is on the current line. It follows wildcards. Opens the include(s) in gl-conf major mode."
+  "Visit the include file that is on the current line.
+
+ Follows wildcards and opens the include(s) in `gl-conf-mode'.
+
+Returns a list of the visited buffers."
   (interactive)
-  (let (curpoint (point)
-				 buffers)
-    (beginning-of-line nil)
-    (if (not (re-search-forward gl-conf-regex-include (point-at-eol) t))
-		(message "Not a include line")
-	  (setq buffers (find-file (match-string 1) t))
-	  (if (listp buffers)
-		  (dolist (buf buffers)
-			(switch-to-buffer buf)
-			(gl-conf-mode))
-		(gl-conf-mode))))
-  )
+  (let (bufs)
+    (beginning-of-line)
+    (if (not (re-search-forward gl-conf--include-rx (point-at-eol) t))
+        (progn (message "Not a include line") nil)
+      (setq bufs (find-file (match-string 2) t))
+      (setq bufs (if (listp bufs) bufs (list bufs)))
+      (dolist (buf bufs)
+        (switch-to-buffer buf)
+        (gl-conf-mode))
+      bufs)))
 
-;; conditional predicate that tells whether a buffer name starts with a *
-(defun buffer-starts-with-star (buf)
-  (not (string-match "^*" (buffer-name buf)))
-  )
 
-;; returns a buffer list without the buffers that start with *
-(defun filter-star-buffers (lst)
-  (delq nil
-		(mapcar (lambda (x) (and (funcall 'buffer-starts-with-star x) x)) lst))
-  )
-
-(defun gl-conf-list-common (regex)
-  (interactive)
+(defun gl-conf-list-common (regexp)
+  "List all occurrences of a specified REGEXP with hyperlinks."
   (save-excursion
     ;; open the included files
-    (gl-conf-visit-all-includes)
-	(let ((buflist (buffer-list)))
-	  ;; Before calling multi-occur, filter out special buffers starting with *
-	  ;; If multi-occur is not found fallback to occur
-	(if (fboundp 'multi-occur)
-		(multi-occur (filter-star-buffers buflist) regex)
-	  (occur regex)))
-	;; Clean the navigation buffer that occur created
-    (occur-clean)
-    )
-  )
+    (let ((bufs (gl-conf--visit-all-includes))
+          (inhibit-message t))
+      ;; If multi-occur is not found fallback to occur.
+      (if (fboundp #'multi-occur)
+          (multi-occur bufs regexp)
+        (occur regexp)))
+    ;; Clean the navigation buffer that occur created.
+    (gl-conf--occur-clean)))
 
 
 (defun gl-conf-list-repos ()
-  "Opens another window with a list of the repos that were found. It supports hyperlinking, so hitting RET on there will
-take you to the occurrence.
+  "Open a window with a list of all repos for the configuration file(s).
 
-In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
-Otherwise it will use 'occur', which searches only in the current file."
+ The new window supports hyperlinking, so hitting RET on there
+will take you to the occurrence.
+
+In recent Emacs versions, it will use 'multi-occur', so it
+navigates through the includes to find references in them as
+well; Otherwise it will use `occur', which searches only in the
+current file."
   (interactive)
-  (gl-conf-list-common "^[ \t]*repo[ \t]+.*")
-  )
+  (gl-conf-list-common gl-conf--repo-rx))
 
 
 (defun gl-conf-list-groups ()
-  "Opens another window with a list of the group definitions that were found. It supports hyperlinking, so hitting RET on there will
-take you to the occurrence.
+  "Open a window with a list of all group definitions.
 
-In recent emacs versions, it will use 'multi-occur', so it navigates through the includes to find references in them as well;
-Otherwise it will use 'occur', which searches only in the current file."
+ The new window supports hyperlinking, so hitting RET on there
+will take you to the occurrence.
+
+In recent Emacs versions, it will use 'multi-occur', so it
+navigates through the includes to find references in them as
+well; Otherwise it will use 'occur', which searches only in the
+current file."
   (interactive)
-  (gl-conf-list-common "^[ \t]*@[A-Za-z0-9][A-Za-z0-9-_.]+")
-  )
+  (gl-conf-list-common gl-conf--group-rx))
+
 
 (defun gl-conf-mark-repo ()
-  "Mark (select) the repo where the cursor is."
+  "Mark everything between the previous repo definition and the next one."
   (interactive)
-  (let ((cur-point (point)))
-	;; go to previous repo definition line, which is the one that contains the cursor and mark the position
-	(beginning-of-line nil)
-	(when (or (looking-at gl-conf-regex-repo) (gl-conf-find-prev-repo))
-		  (set-mark (point))
-		  ;; Now look for the next repo or end of buffer
-		  (if (not (gl-conf-find-next-repo))
-			(goto-char (point-max)))
-		  ;; and move back while the line is empty
-		  (if (not (eobp))
-			  (forward-line -1))
-		  (while (looking-at "^$")
-			(forward-line -1))
-		  ;; and then go to the end of line to select it
-		  (end-of-line)))
-)
+  ;; Go to previous repo definition line, which is the one that contains the
+  ;; cursor and mark the position
+  (beginning-of-line)
+  (when (or (looking-at gl-conf--repo-rx)
+            (gl-conf-find-prev-repo))
+    (set-mark (point))
+    ;; Now look for the next repo or end of buffer...
+    (if (not (gl-conf-find-next-repo))
+        (goto-char (point-max)))
+    ;; ...and move back while the line is empty...
+    (if (not (eobp))
+        (forward-line -1))
+    (while (looking-at "^$")
+      (forward-line -1))
+    ;; ...and then go to the end of line to select it.
+    (end-of-line)))
 
-(defun open-url (url)
-  (interactive)
+
+(defun gl-conf--open-url (url)
+  "Open a URL with `w3m'."
   (let ((cur-buffer (get-buffer (buffer-name))))
-	(if (fboundp 'w3m-goto-url)
-		(progn
-		  (when (one-window-p t)
-			(split-window)
-			(set-window-buffer nil cur-buffer))
-		  (w3m-goto-url url))
+    (if (fboundp 'w3m-goto-url)
+        (progn
+          (when (one-window-p t)
+            (split-window)
+            (set-window-buffer nil cur-buffer))
+          (w3m-goto-url url))
+      (browse-url url))))
 
-	  (browse-url url)))
-
-  )
 
 (defun gl-conf-context-help ()
-  "Offer context-sensitive help. Currently it needs w3m emacs installed. It would be nice if it could fall back to another mechanism, if this is not available"
+  "Offer context-sensitive help.
+
+ Currently it needs `w3m' Emacs installed.  It would be nice if
+ it could fall back to another mechanism, if this is not
+ available."
   (interactive)
-  ;; we want to make this section case-sensitive
-  (setq old-case-fold-search case-fold-search)
-  (setq case-fold-search nil)
-  (setq cur-point (point)) ;; make a let
-  (save-excursion
-	;; are we in a group?
-	(if (and (word-at-point) (string-match "^@" (word-at-point)))
-		(progn (open-url "http://sitaramc.github.com/gitolite/bac.html#groups")
-			   (message "Opened help for group definition"))
-	  (beginning-of-line)
 
-	  ;; are we on the right side of an assignment with a permission at the beginning (this means that we are in the users / groups part)?
-	  (cond
-	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
-		(open-url "http://sitaramc.github.com/gitolite/bac.html")
-		(message "Opened help for user / group assignment"))
+  ;; Ensure that this section is case-sensitive.
+  (let ((cur-point (point))
+        (case-fold-search nil))
+    (save-excursion
 
-	   ;; are we on a refex or right after it? (if there is a permission before and we are looking at some word)
-	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
-		(open-url "http://sitaramc.github.com/gitolite/bac.html#refex")
-		(message "Opened help for refex definition"))
+      ;; Are we in a group?
+      (if (and (word-at-point) (string-match "^@" (word-at-point)))
+          (progn (gl-conf--open-url "http://gitolite.com/gitolite/conf/#group-definitions")
+                 (message "Opened help for group definition"))
+        (beginning-of-line)
 
-		  ;; are we in a permission code or right after it?
-	   ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
-		(open-url "http://sitaramc.github.com/gitolite/progit.html#progit_article_Config_File_and_Access_Control_Rules__")
-		(message "Opened help for permission values"))
+        ;; Are we on the right side of an assignment with a permission at the
+        ;; beginning (this means that we are in the users / groups part)?
+        (cond
+         ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
+          (message "Opened help for access rules")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#access-rules"))
 
-	   ;; look for other things...
-	   ;; are we in a repo line?
-	   ((looking-at "[ \t]*repo" )
-		(open-url "http://sitaramc.github.com/gitolite/pictures.html#1000_words_adding_repos_to_gitolite_")
-		(message "Opened help for repo"))
+         ;; Are we on a refex or right after it? (if there is a permission
+         ;; before and we are looking at some word)
+         ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
+          (message "Opened help for refex definition")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#the-refex-field"))
 
-	   ;; are we in an include line?
-	   ((looking-at "[ \t]*include")
-		(open-url "http://sitaramc.github.com/gitolite/syntax.html#gitolite_conf_include_files_")
-		(message "Opened help for includes"))
-		 ;; not found anything? Open generic help
-	   (t
-		(open-url "http://sitaramc.github.com/gitolite/conf.html#confrecap")
-		(message "Not in any known context. Opened general help for gitolite.conf")))))
+         ;; Are we in a permission code or right after it?
+         ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
+          (message "Opened help for access control rule matchings")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf-2/#access-control-rule-matching"))
 
-  (setq case-fold-search old-case-fold-search)
-  )
+         ;; Look for other things...
+         ;; Are we on a repo line?
+         ((looking-at "[ \t]*repo" )
+          (message "Opened help for repo")
+          (gl-conf--open-url "http://gitolite.com/gitolite/basic-admin/#add-remove-and-rename-repos"))
 
+         ;; Are we in an include line?
+         ((looking-at "[ \t]*include")
+          (message "Opened help for includes")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#include-files"))
 
+         ;; Not found anything? Open generic help
+         (t
+          (message "Not in any known context. Opened general help section")
+          (gl-conf--open-url "http://gitolite.com/gitolite/conf/")))))))
 
-;; Definition of constants for the font-lock functionality
-(defconst gl-conf-font-lock-buffer
-  (list '("^[ \t]*\\(repo[ \t]+[A-Za-z0-9][A-Za-z0-9-/_.*]*\\)[ \t\n]" 1 font-lock-keyword-face) ;; repository definition
-		'("^[ \t]*\\(include[ \t]+\\)" 1 font-lock-keyword-face) ;; include definition
-		'("^[ \t]*\\(-\\|R\\|RW\\+?C?D?M?\\)[ \t].*=" 1 font-lock-type-face) ;; permissions
-		'("^[ \t]*\\(config\\).*=" 1 font-lock-reference-face) ;; config
-		'("^[ \t]*\\(config.*\\)" 1 font-lock-warning-face) ;; config partial definition (warning)
-		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)[ \t]*=" 1 font-lock-variable-name-face) ;; group definition
-		'("^[ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+.*\\)" 1 font-lock-warning-face) ;; group wrong definition (warning)
-		'("[= \t][ \t]*\\(@[A-Za-z0-9][A-Za-z0-9-_.]+\\)" 1 font-lock-variable-name-face) ;; group usage
-		'("^[ \t]*\\(?:-\\|R\\|RW\\+?C?D?M?\\)[ \t]+\\(\\(?:\\w\\|/\\|\\[\\|\\]\\|-\\)+\\)[ \t]*=" 1 font-lock-type-face)) ;; refexes
-
-  "gl-conf mode syntax highlighting."
-  )
-
-;;
-;; Syntax table
-;;
-(defvar gl-conf-mode-syntax-table nil "Syntax table for gl-conf-mode.")
-(setq gl-conf-mode-syntax-table nil)
-
-;;
-;; User hook entry point.
-;;
-(defvar gl-conf-mode-hook nil)
-
-;;
-;; Customization to enable or disable automatic indentation
-;;
-(defgroup gl-conf nil "Gitolite configuration editing." :tag "Gitolite config files" :prefix "gl-conf" :group 'files)
-(defcustom gl-conf-auto-indent-enable nil "Enable automatic indentation for gl-conf mode." :type 'boolean :group 'gl-conf)
 
 ;;
 ;; gl-conf mode init function.
 ;;
-(defun gl-conf-mode ()
+
+(defconst gl-conf--syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?_  "w" table)
+    (modify-syntax-entry ?@  "w" table)
+    (modify-syntax-entry ?#  "<" table)
+    (modify-syntax-entry ?\n ">" table)
+    table)
+  "Syntax table for `gl-conf-mode'.")
+
+
+(defvar gl-conf-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-n") #'gl-conf-find-next-repo)
+    (define-key map (kbd "C-c C-p") #'gl-conf-find-prev-repo)
+    (define-key map (kbd "C-c C-v") #'gl-conf-visit-include)
+    (define-key map (kbd "C-c C-l") #'gl-conf-list-repos)
+    (define-key map (kbd "C-c C-m") #'gl-conf-mark-repo)
+    (define-key map (kbd "C-c C-g") #'gl-conf-list-groups)
+    (define-key map (kbd "C-c C-h") #'gl-conf-context-help)
+    map)
+  "Keymap for `gl-conf-mode'.")
+
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("gitolite.conf\\'" . gl-conf-mode))
+
+
+;;;###autoload
+(define-derived-mode gl-conf-mode prog-mode "gitolite-conf"
   "Major mode for editing gitolite config files.
-Provides basic syntax highlighting (including detecting some malformed constructs) and some navigation functions
-Commands:
-key          binding                       description
----          -------                       -----------
-\\[gl-conf-find-next-repo]      gl-conf-find-next-repo        move to next repository definition.
-\\[gl-conf-find-prev-repo]      gl-conf-find-prev-repo        move to previous repository definition.
-\\[gl-conf-visit-include]      gl-conf-visit-include         go to the include file on the line where the cursor is.
-\\[gl-conf-list-repos]      gl-conf-list-repo             open a navigation window with all the repositories (hyperlink enabled).
-\\[gl-conf-mark-repo]      gl-conf-mark-repo             mark (select) the current repository and body.
-\\[gl-conf-list-groups]      gl-conf-list-groups           open a navigation window with all the repositories (hyperlink enabled).
-\\[gl-conf-context-help]      gl-conf-mark-repo             open gitolite help (context sensitive)."
 
-  (interactive)
-  (kill-all-local-variables)
-  (setq major-mode 'gl-conf-mode)
-  (setq mode-name "gitolite-conf")
+Provides basic syntax highlighting (including detection of some
+malformed constructs) and basic navigation.
 
-  (require 'thingatpt)
+\\{gl-conf-mode-map}"
+  :group 'gl-conf
+  :syntax-table gl-conf--syntax-table
 
-  ;; Create the syntax table
-  (setq gl-conf-mode-syntax-table (make-syntax-table))
-  (set-syntax-table gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?_  "w" gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?@  "w" gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?# "<" gl-conf-mode-syntax-table)
-  (modify-syntax-entry ?\n ">" gl-conf-mode-syntax-table)
-
-  ;; Setup font-lock mode, indentation and comment highlighting
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(gl-conf-font-lock-buffer))
-
-  (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'gl-conf-indent)
-
-  (make-local-variable 'comment-start)
-  (setq comment-start "#")
-
-  ;; to make searches case sensitive in some points in the code
-  (make-local-variable 'case-fold-search)
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
+  (setq-local indent-line-function #'gl-conf-indent)
+  (setq-local font-lock-defaults gl-conf--font-lock-keywords)
+  (font-lock-flush))
 
 
-  ;; setup key bindings (C-c followed by control character are reserved for major modes by the conventions)
-  (local-set-key (kbd "C-c C-n") 'gl-conf-find-next-repo)
-  (local-set-key (kbd "C-c C-p") 'gl-conf-find-prev-repo)
-  (local-set-key (kbd "C-c C-v") 'gl-conf-visit-include)
-  (local-set-key (kbd "C-c C-l") 'gl-conf-list-repos)
-  (local-set-key (kbd "C-c C-m") 'gl-conf-mark-repo)
-  (local-set-key (kbd "C-c C-g") 'gl-conf-list-groups)
-  (local-set-key (kbd "C-c C-h") 'gl-conf-context-help)
-
-
-  ;; Run user hooks.
-  (run-hooks 'gl-conf-mode-hook))
-
-
-;; Show the world what we have
 (provide 'gl-conf-mode)
-(provide 'gl-conf-find-next-repo)
-(provide 'gl-conf-find-prev-repo)
-(provide 'gl-conf-visit-include)
-(provide 'gl-conf-list-repos)
-(provide 'gl-conf-mark-repo)
+
+;;; gl-conf-mode.el ends here
