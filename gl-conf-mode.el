@@ -7,7 +7,7 @@
 ;; URL: https://github.com/llloret/gitolite-emacs
 ;; Keywords: git, gitolite, languages
 ;; Version: 0.3
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24.3"))
 ;;
 ;;
 ;; This file is not part of GNU Emacs.
