@@ -464,7 +464,7 @@ current file."
 ;; gl-conf mode init function.
 ;;
 
-(defconst gl-conf--syntax-table
+(defconst gl-conf-mode-syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?_  "w" table)
     (modify-syntax-entry ?@  "w" table)
@@ -500,8 +500,6 @@ malformed constructs) and basic navigation.
 
 \\{gl-conf-mode-map}"
   :group 'gl-conf
-  :syntax-table gl-conf--syntax-table
-
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local indent-line-function #'gl-conf-indent)
