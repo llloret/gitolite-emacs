@@ -503,8 +503,7 @@ malformed constructs) and basic navigation.
   (setq-local comment-start "# ")
   (setq-local comment-start-skip "#+\\s-*")
   (setq-local indent-line-function #'gl-conf-indent)
-  (setq-local font-lock-defaults gl-conf--font-lock-keywords)
-  (font-lock-flush))
+  (setq-local font-lock-defaults gl-conf--font-lock-keywords))
 
 
 (provide 'gl-conf-mode)
