@@ -193,6 +193,10 @@
      (,gl-conf--refex-rx 1 font-lock-type-face)))
   "Syntax highlighting for gl-conf-mode.")
 
+(defconst gl-conf--gitolite-doc-base-url
+  "https://gitolite.com/gitolite/"
+  "Base URL for all documentation files of Gitolite.")
+
 
 ;;
 ;; Indentation logic
@@ -406,6 +410,14 @@ current file."
       (browse-url url))))
 
 
+(defun gl-conf--documentation-url (section &optional subject)
+  "Build the URL to the SECTION file of the Gitolite documentation.
+If SUBJECT is non-nil, the URL will precisely point at SUBJECT."
+  (if subject
+      (format "%s%s.html#%s" gl-conf--gitolite-doc-base-url section subject)
+    (format "%s%s.html" gl-conf--gitolite-doc-base-url section)))
+
+
 (defun gl-conf-context-help ()
   "Offer context-sensitive help.
 
@@ -421,7 +433,7 @@ current file."
 
       ;; Are we in a group?
       (if (and (word-at-point) (string-match "^@" (word-at-point)))
-          (progn (gl-conf--open-url "http://gitolite.com/gitolite/conf/#group-definitions")
+          (progn (gl-conf--open-url (gl-conf--documentation-url "conf" "group-definitions"))
                  (message "Opened help for group definition"))
         (beginning-of-line)
 
@@ -430,34 +442,34 @@ current file."
         (cond
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]*=" (+ cur-point 1) t)
           (message "Opened help for access rules")
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#access-rules"))
+          (gl-conf--open-url (gl-conf--documentation-url "conf" "access-rules")))
 
          ;; Are we on a refex or right after it? (if there is a permission
          ;; before and we are looking at some word)
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)[ \t]+\\w+" (+ cur-point 1)  t)
           (message "Opened help for refex definition")
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#the-refex-field"))
+          (gl-conf--open-url (gl-conf--documentation-url "conf" "the-refex-field")))
 
          ;; Are we in a permission code or right after it?
          ((re-search-forward "^[ \t]*\\(-\\|R\\|RW\\+?C?D?\\)" (+ cur-point 1) t)
           (message "Opened help for access control rule matchings")
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf-2/#access-control-rule-matching"))
+          (gl-conf--open-url (gl-conf--documentation-url "conf-2" "access-control-rule-matching")))
 
          ;; Look for other things...
          ;; Are we on a repo line?
          ((looking-at "[ \t]*repo" )
           (message "Opened help for repo")
-          (gl-conf--open-url "http://gitolite.com/gitolite/basic-admin/#add-remove-and-rename-repos"))
+          (gl-conf--open-url (gl-conf--documentation-url "basic-admin" "add-remove-and-rename-repos")))
 
          ;; Are we in an include line?
          ((looking-at "[ \t]*include")
           (message "Opened help for includes")
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/#include-files"))
+          (gl-conf--open-url (gl-conf--documentation-url "conf" "include-files")))
 
          ;; Not found anything? Open generic help
          (t
           (message "Not in any known context. Opened general help section")
-          (gl-conf--open-url "http://gitolite.com/gitolite/conf/")))))))
+          (gl-conf--open-url (gl-conf--documentation-url "conf"))))))))
 
 
 ;;
